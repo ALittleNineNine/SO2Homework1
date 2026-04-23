@@ -13,5 +13,5 @@ typedef struct variabile {
 } variabile;
 
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
-variabile *inserisci_var(variabile *next_var, char tipo[], char nome[], int riga);
+variabile *add_var(variabile *next_var, char tipo[], char nome[], int riga);
 
