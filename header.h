@@ -4,14 +4,16 @@
 #include <stdbool.h>
 
 // struct lista concatenata per memorizzare informazioni sulle variabili
-typedef struct variabile {
-    char tipo[64];
-    char nome[64];
-    bool utilizzato;
-    int riga;
-    struct variabile *next;
-} variabile;
+typedef struct variable {
+    char type[64];
+    char name[64];
+    bool used;
+    int row;
+    struct variable *next;
+} variable;
 
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
-variabile *add_var(variabile *next_var, char tipo[], char nome[], int riga);
+variable *add_var(variable *next_var, char type[], char name[], int row);
+
+void analyze_row(char row[]);
 

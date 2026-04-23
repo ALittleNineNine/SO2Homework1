@@ -2,7 +2,8 @@
 
 int main(int argc, char *argv[]) {
 
-    char riga_attuale[512];
+    char current_row[256];
+    char new_line[] = "\n";
 
     FILE *fp;
     fp = fopen(argv[1], "r");
@@ -12,18 +13,19 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    char new_line[] = "\n";
 
     while (!feof(fp)) {
-        fgets(riga_attuale, sizeof(riga_attuale), fp);
-        if (strcmp(riga_attuale, new_line)) {
-        printf("%s", riga_attuale);
+        fgets(current_row, sizeof(current_row), fp);
+        if (strcmp(current_row, new_line)) {
+            analyze_row(current_row);
+
+            // printf("%s", current_row);
         }
     }
 
     fclose(fp);
 
-    
+
 
     /*
     printf("Numero argomenti: %d\nContenuto argomenti: ", argc);
