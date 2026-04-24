@@ -15,5 +15,6 @@ typedef struct variable {
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
 variable *add_var(variable *next_var, char type[], char name[], int row);
 
+// data una riga di codice, li spezza in al massimo in 7 parole
 void analyze_row(char row[], char words[7][64]);
 
