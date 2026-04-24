@@ -12,9 +12,21 @@ typedef struct variable {
     struct variable *next;
 } variable;
 
+typedef struct error {
+    bool wrong_type;
+    bool wrong_name;
+    int row;
+    struct error *next;
+} error;
+
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
 variable *add_var(variable *next_var, char type[], char name[], int row);
 
+// crea un nuovo nodo errore e lo collega in testa alla lista errori
+error *add_error(error *next_err, int row);
+
 // data una riga di codice, li spezza in al massimo in 7 parole
 void analyze_row(char row[], char words[7][64]);
+
+
 

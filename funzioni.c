@@ -34,7 +34,7 @@ void analyze_row(char row[], char words[7][64]) {
             }
         }
         if (flag > 7) break;
-        
+
     }
 
 }
