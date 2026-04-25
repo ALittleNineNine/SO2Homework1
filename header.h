@@ -38,10 +38,13 @@ void get_name(char words[64][64], char name[64][64], int start_idx);
 // data una word, restituisce true se word è un tipo base
 bool is_basic_type(char word[]);
 
-// dato un array type, ritornare true se è un type
+// dato un array type, restituisce true se è un type
 bool verify_type(char type[64][64]);
 
-// dato un array name, ritornare true se sono tutti nomi validi
+// data una word, restituisce true se word è una keyword del linguaggio C
+bool is_keyword(char word[]);
+
+// dato un array name, restituisce true se sono tutti nomi validi
 bool verify_name(char name[64][64]);
 
 

@@ -26,7 +26,16 @@ int main(int argc, char *argv[]) {
             int type_length = get_type(words, type);
             char name[64][64] = {0};
             get_name(words, name, type_length);
-            bool is_type = verify_type(type);
+
+            if (!verify_type(type)) {
+                printf("Riga %d: Errore tipo\n", row);
+            }
+
+            if (!verify_name(name)) {
+                printf("Riga %d: Errore nome\n", row);
+            }
+
+
 
 
 
@@ -53,8 +62,6 @@ int main(int argc, char *argv[]) {
             }
             printf("\n");
 
-            printf("Tipo valido? %d", is_type);
-
             printf("\n\n");
 
             // fine parte prova
@@ -67,3 +74,11 @@ int main(int argc, char *argv[]) {
     return 0;
 
 }
+
+
+
+
+
+
+
+

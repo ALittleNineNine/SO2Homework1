@@ -95,7 +95,7 @@ bool is_basic_type(char word[]) {
 
 }
 
-// dato un array type, ritornare true se è un type
+// dato un array type, restituisce true se è un type
 bool verify_type(char type[64][64]) {
 
     int signed_count = 0;
@@ -106,6 +106,13 @@ bool verify_type(char type[64][64]) {
     bool exist_basic_type = false;
     
     char current_word[64];
+    /*
+        questo ciclo for itera su tutte le parole in array type, ne estrae le seguenti informazioni:
+        - quantità di modificatori: "signed", "unsigned", "long", "short";
+        - il tipo di base (che può esistere uno solo o anche non esistere secondo standard);
+        - un bool che indica se esiste il tipo di base.
+        se il tipo di base non esiste, o che esiste più di una, restituisce direttamente false
+    */
     for (int i=0; i < 64; i++) {
         strcpy(current_word, type[i]);
         if (!strcmp(current_word, "\0")) break;
@@ -135,6 +142,7 @@ bool verify_type(char type[64][64]) {
         } else return false;
     }
 
+    // questa marea di if-else serve per verificare se le quantità di modificatore estratti precedentemente sono validi
     if (!strcmp(basic_type, "char")) {
         if (signed_count > 1 || unsigned_count > 1 || (signed_count > 0 && unsigned_count > 0) ||
             long_count > 0 || short_count > 0) return false;
@@ -154,9 +162,42 @@ bool verify_type(char type[64][64]) {
 
 }
 
-// dato un array name, ritornare true se sono tutti nomi validi
+// data una word, restituisce true se word è una keyword del linguaggio C
+bool is_keyword(char word[]) {
+
+    char *keyword[] = {"auto"  , "break" , "case"    , "char"  , "const"   , "continue", "default" , "do"    ,
+                       "double", "else"  , "enum"    , "extern", "float"   , "for"     , "goto"    , "if"    ,
+                       "int"   , "long"  , "register", "return", "short"   , "signed"  , "sizeof"  , "static",
+                       "struct", "switch", "typedef" , "union" , "unsigned", "void"    , "volatile", "while"};
+    for (int i=0; i < 32; i++) {
+        if (!strcmp(keyword[i], word)) return true;
+    }
+    return false;
+
+}
+
+// dato un array name, restituisce true se sono tutti nomi validi
 bool verify_name(char name[64][64]) {
     
+    char current_word[64];
+    // itera su tutte le parole in array name, se è una keyword, restituisce false
+    for (int i=0; i < 64; i++) {
+        strcpy(current_word, name[i]);
+        if (!strcmp(current_word, "\0")) break;
+        if (is_keyword(current_word)) return false;
+
+        char current_char;
+        // itera su tutti i char di ogni nome e restituisce false se il nome non è valido
+        for (int j=0; j < 64; j++) {
+            current_char = current_word[j];
+            if (current_char == '\0') break;
+            if (j == 0 && current_char >= 48 && current_char <= 57) return false;
+            if (current_char < 48 || (current_char > 57 && current_char < 65) || (current_char > 90 && current_char < 95) ||
+               (current_char > 95 && current_char < 97) || current_char > 122) return false;
+        }
+
+    }
+
     return true;
 
 }
