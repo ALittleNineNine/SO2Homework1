@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
     char new_line[] = "\n";
     char current_row[256];
     int row = 0;
-    
+
     while (!feof(fp)) {
         row++;
         fgets(current_row, sizeof(current_row), fp);
@@ -23,9 +23,14 @@ int main(int argc, char *argv[]) {
             char words[64][64] = {0};
             analyze_row(current_row, words);
             char type[64][64] = {0};
-            get_type(words, type);
+            int type_length = get_type(words, type);
+            char name[64][64] = {0};
+            get_name(words, name, type_length);
+            bool is_type = verify_type(type);
 
 
+
+            // inizio parte prova
 
             printf("Parole di riga %d: ", row);
             for (int i=0; i<64; i++) {
@@ -39,7 +44,20 @@ int main(int argc, char *argv[]) {
                 if (!strcmp(type[i], "\0")) break;
                 printf("%s ", type[i]);
             }
+            printf("\n");
+
+            printf("Nomi di riga %d: ", row);
+            for (int i=0; i<64; i++) {
+                if (!strcmp(name[i], "\0")) break;
+                printf("%s ", name[i]);
+            }
+            printf("\n");
+
+            printf("Tipo valido? %d", is_type);
+
             printf("\n\n");
+
+            // fine parte prova
 
         }
     }

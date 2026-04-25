@@ -19,9 +19,6 @@ typedef struct error {
     struct error *next;
 } error;
 
-// tipi base
-// const char *basic_type[] = {"char", "int", "float", "double", "void", "_Bool", "bool"};
-
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
 variable *add_var(variable *next_var, char type[], char name[], int row);
 
@@ -32,5 +29,24 @@ error *add_error(error *next_err, int row);
 void analyze_row(char row[], char words[64][64]);
 
 // data un array di array di char contenente una riga di dichiarazione variabile, lo mantiene solo la parte type
-void get_type(char words[64][64], char type[64][64]);
+// ritorna la lunghezza della parte type
+int get_type(char words[64][64], char type[64][64]);
+
+// data un array di array di char contenente una riga di dichiarazione variabile, mantiene solo la parte name
+void get_name(char words[64][64], char name[64][64], int start_idx);
+
+// data una word, restituisce true se word è un tipo base
+bool is_basic_type(char word[]);
+
+// dato un array type, ritornare true se è un type
+bool verify_type(char type[64][64]);
+
+// dato un array name, ritornare true se sono tutti nomi validi
+bool verify_name(char name[64][64]);
+
+
+
+
+
+
 
