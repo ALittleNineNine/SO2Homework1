@@ -59,8 +59,14 @@ bool existing_var(variable *variables, char name[]);
 // trasforma un array in una stringa inplacemente
 void array_to_string(char array[64][64], char string[]);
 
+// calcola il numero di celle nelle due liste variables e errors
+void linked_list_count(int *var_err_count, variable *variables, error *errors);
 
+// ritorna true se in questa riga words contiene main
+bool is_main(char words[64][64]);
 
+// data la prima word di una riga, restituisce true se è finita la parte di dichiarazione variabile
+bool end_variable_declaration(char word[]);
 
 
 

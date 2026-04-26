@@ -1,4 +1,6 @@
-         typedef  int        intero;
+#include <stdio.h>
+
+// typedef  int        intero;
 
         int    main()  {
     int    zero= 0;
@@ -14,6 +16,7 @@
     const volatile unsigned const long const long float an4n45;
 
 
+    int qq;
     unsigned int;
     long long while;
 
@@ -23,6 +26,12 @@
 
     const static unsigned        long  long int  *** ***const *const ***** tipo3words=123   ,a,v,    b[12]   ;;;;
     int a = 0 ;;;;;;;{{{{{{{{{{{}}}}}}}}}}};;
+
+
+
+    printf("%d\n", a);
+    printf("%d%d\n", a, b);
+    qq = a +b;
 
     return     0;
 }

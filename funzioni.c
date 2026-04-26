@@ -34,13 +34,15 @@ void analyze_row(char row[], char words[64][64]) {
     for (int i=0; i < strlen(row); i++) {
 
         char current_char = row[i];
-        if (current_char != ' ' && current_char != '\t' && current_char != '\n') {
+        if (current_char != ' ' && current_char != '\t' && current_char != '\n') {      // char da ignorare
             words[flag][idx_char] = current_char;
             idx_char++;
 
             char next_char = row[i+1];
-            if (next_char == ' ' || next_char == '\t' || next_char == '\n' || next_char == ';' ||
-                next_char == ',' || current_char == ',' || next_char == '=' || current_char == '=') {
+            if (current_char < 48 || (current_char > 57 && current_char < 65) || (current_char > 90 && current_char < 95) ||
+                (current_char > 95 && current_char < 97) || current_char > 122 ||
+                next_char < 48 || (next_char > 57 && next_char < 65) || (next_char > 90 && next_char < 95) ||
+                (next_char > 95 && next_char < 97) || next_char > 122) {
                 flag++;
                 idx_char = 0;
             }
@@ -167,12 +169,12 @@ bool verify_type(char type[64][64]) {
 // data una word, restituisce true se word è una keyword del linguaggio C
 bool is_keyword(char word[]) {
 
-    char *keyword[] = {"auto"  , "break" , "case"    , "char"  , "const"   , "continue", "default" , "do"    ,
+    char *keywords[] = {"auto"  , "break" , "case"    , "char"  , "const"   , "continue", "default" , "do"    ,
                        "double", "else"  , "enum"    , "extern", "float"   , "for"     , "goto"    , "if"    ,
                        "int"   , "long"  , "register", "return", "short"   , "signed"  , "sizeof"  , "static",
                        "struct", "switch", "typedef" , "union" , "unsigned", "void"    , "volatile", "while"};
     for (int i=0; i < 32; i++) {
-        if (!strcmp(keyword[i], word)) return true;
+        if (!strcmp(keywords[i], word)) return true;
     }
     return false;
 
@@ -207,7 +209,7 @@ bool verify_name(char name[64][64]) {
                 flag = false;
             }
             if (current_char < 48 || (current_char > 57 && current_char < 65) || (current_char > 90 && current_char < 95) ||
-               (current_char > 95 && current_char < 97) || current_char > 122) {
+                (current_char > 95 && current_char < 97) || current_char > 122) {
                 strcpy(name[i], "!valid");
                 flag = false;
                }
@@ -241,6 +243,46 @@ void array_to_string(char array[64][64], char string[]) {
         strcat(string, array[i]);
     }
 }
+
+// calcola il numero di celle nelle due liste variables e errors
+void linked_list_count(int *var_err_count, variable *variables, error *errors) {
+
+    variable *current_var = variables;
+    while (current_var != NULL) {
+        var_err_count[0]++;
+        current_var = current_var->next;
+    }
+
+    error *current_err = errors;
+    while (current_err != NULL) {
+        var_err_count[1]++;
+        current_err = current_err->next;
+    }
+
+}
+
+// ritorna true se in questa riga words contiene main
+bool is_main(char words[64][64]) {
+    for (int i=0; i < 64; i++) {
+        if (!strcmp(words[i], "\0")) break;
+        if (!strcmp(words[i], "main")) return true;
+    }
+    return false;
+}
+
+// data la prima word di una riga, restituisce true se è finita la parte di dichiarazione variabile
+bool end_variable_declaration(char word[]) {
+
+    char *keywords[] = {"const", "volatile", "restrict", "signed", "unsigned", "long", "short",
+                        "char", "int", "double", "float", "void", "_Bool", "bool"};
+    for (int i=0; i < 14; i++) {
+        if (!strcmp(keywords[i], word)) return false;
+    }
+    return true;
+
+} // !!! DA RIVEDERE (TIPI ERRONEI NON ESISTENTI FANNO FINIRE DIRETTAMENTE LA PARTE DICHIARAZIONE VARIABILE) !!!
+
+
 
 
 
