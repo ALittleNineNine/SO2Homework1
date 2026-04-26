@@ -51,8 +51,10 @@ void analyze_row(char row[], char words[64][64]) {
 
 }
 
-// dato un array di array di char contenente una riga di dichiarazione variabile, mantiene solo la parte type
-// ritorna la lunghezza della parte type
+/*
+    data un array di array di char contenente una riga di dichiarazione variabile, lo mantiene solo la parte type
+    ritorna la lunghezza della parte type
+*/
 int get_type(char words[64][64], char type[64][64]) {
 
     int length = 0; // lunghezza della parte type
@@ -176,33 +178,69 @@ bool is_keyword(char word[]) {
 
 }
 
-// dato un array name, restituisce true se sono tutti nomi validi
+/* 
+    dato un array name, restituisce true se sono tutti nomi validi
+    il nome eventualmente non valido viene sostituito inplacemente con "!valid"
+    quindi se la funzione restituisce false, non significa automaticamente che non ci siano nomi validi
+*/
 bool verify_name(char name[64][64]) {
     
+    bool flag = true;   // false se almeno un nome non è valido
+
     char current_word[64];
     // itera su tutte le parole in array name, se è una keyword, restituisce false
     for (int i=0; i < 64; i++) {
         strcpy(current_word, name[i]);
         if (!strcmp(current_word, "\0")) break;
-        if (is_keyword(current_word)) return false;
+        if (is_keyword(current_word)) {
+            strcpy(name[i], "!valid");  // la stringa "!valid" indica nome non valido, da ignorare quando si memorizzerà
+            flag = false;
+        }
 
         char current_char;
         // itera su tutti i char di ogni nome e restituisce false se il nome non è valido
         for (int j=0; j < 64; j++) {
             current_char = current_word[j];
             if (current_char == '\0') break;
-            if (j == 0 && current_char >= 48 && current_char <= 57) return false;
+            if (j == 0 && current_char >= 48 && current_char <= 57) {
+                strcpy(name[i], "!valid");
+                flag = false;
+            }
             if (current_char < 48 || (current_char > 57 && current_char < 65) || (current_char > 90 && current_char < 95) ||
-               (current_char > 95 && current_char < 97) || current_char > 122) return false;
+               (current_char > 95 && current_char < 97) || current_char > 122) {
+                strcpy(name[i], "!valid");
+                flag = false;
+               }
         }
 
     }
 
-    return true;
+    return flag;
 
 }
 
+// data una lista concatenata contenenti varaibili e un nome, restituisce true se il nome appartiene alla lista
+bool existing_var(variable *variables, char name[]) {
 
+    variable *current_var = variables;
+    while (current_var != NULL) {
+        if (!strcmp(current_var->name, name)) {
+            return true;
+        }
+        current_var = current_var->next;
+    }
+    return false;
+
+}
+
+// trasforma un array in una stringa inplacemente
+void array_to_string(char array[64][64], char string[]) {
+    for (int i=0; i < 64; i++) {
+        if (!strcmp(array[i], "\0")) break;
+        if (i != 0) strcat(string, " ");
+        strcat(string, array[i]);
+    }
+}
 
 
 

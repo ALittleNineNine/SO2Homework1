@@ -5,7 +5,7 @@
 
 // struct lista concatenata per memorizzare informazioni sulle variabili
 typedef struct variable {
-    char type[64];
+    char type[512];
     char name[64];
     bool used;
     int row;
@@ -28,8 +28,10 @@ error *add_error(error *next_err, int row);
 // data una riga di codice, li spezza in al massimo in 64 parole
 void analyze_row(char row[], char words[64][64]);
 
-// data un array di array di char contenente una riga di dichiarazione variabile, lo mantiene solo la parte type
-// ritorna la lunghezza della parte type
+/*
+    data un array di array di char contenente una riga di dichiarazione variabile, lo mantiene solo la parte type
+    ritorna la lunghezza della parte type
+*/
 int get_type(char words[64][64], char type[64][64]);
 
 // data un array di array di char contenente una riga di dichiarazione variabile, mantiene solo la parte name
@@ -44,8 +46,22 @@ bool verify_type(char type[64][64]);
 // data una word, restituisce true se word è una keyword del linguaggio C
 bool is_keyword(char word[]);
 
-// dato un array name, restituisce true se sono tutti nomi validi
+/* 
+    dato un array name, restituisce true se sono tutti nomi validi
+    il nome eventualmente non valido viene sostituito inplacemente con "!valid"
+    quindi se la funzione restituisce false, non significa automaticamente che non ci siano nomi validi
+*/
 bool verify_name(char name[64][64]);
+
+// data una lista concatenata contenenti varaibili e un nome, restituisce true se il nome appartiene alla lista
+bool existing_var(variable *variables, char name[]);
+
+// trasforma un array in una stringa inplacemente
+void array_to_string(char array[64][64], char string[]);
+
+
+
+
 
 
 

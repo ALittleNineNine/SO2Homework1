@@ -6,7 +6,7 @@
 
     float a, b, c = 1;
 
-    int a=2, b, c= 1;
+    int a=2, c= 1;
 
     const volatile unsigned long long int 4ananas;
     const volatile unsigned const long const long volatile int volatile const const volatile _ananas = 99;
