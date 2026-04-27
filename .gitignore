@@ -1,0 +1,22 @@
+# --- Compilazione ---
+*.o              # File oggetto
+*.obj            # File oggetto (Windows)
+*.so             # Librerie condivise (Linux)
+*.dylib          # Librerie condivise (macOS)
+*.dll            # Librerie condivise (Windows)
+*.a              # Librerie statiche
+*.lib            # Librerie statiche (Windows)
+
+# --- Eseguibili ---
+*.exe            # Eseguibili Windows
+*.out            # Output di default (es. a.out)
+*.app            # Applicazioni macOS
+
+# Se i tuoi eseguibili non hanno estensione (Linux/macOS):
+# È meglio metterli in una cartella specifica (es. bin/) e ignorare quella
+bin/
+build/
+
+# --- File di Debug e Log ---
+*.log
+*.dSYM/          # Debug symbols (macOS)
