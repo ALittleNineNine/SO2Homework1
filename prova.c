@@ -5,7 +5,6 @@
 
 int main() {
     int a;
-    int a;
     printf("%d\n", a);
     return 0;
 }
