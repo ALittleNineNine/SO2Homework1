@@ -170,9 +170,9 @@ bool verify_type(char type[64][64]) {
 bool is_keyword(char word[]) {
 
     char *keywords[] = {"auto"  , "break" , "case"    , "char"  , "const"   , "continue", "default" , "do"    ,
-                       "double", "else"  , "enum"    , "extern", "float"   , "for"     , "goto"    , "if"    ,
-                       "int"   , "long"  , "register", "return", "short"   , "signed"  , "sizeof"  , "static",
-                       "struct", "switch", "typedef" , "union" , "unsigned", "void"    , "volatile", "while"};
+                        "double", "else"  , "enum"    , "extern", "float"   , "for"     , "goto"    , "if"    ,
+                        "int"   , "long"  , "register", "return", "short"   , "signed"  , "sizeof"  , "static",
+                        "struct", "switch", "typedef" , "union" , "unsigned", "void"    , "volatile", "while"};
     for (int i=0; i < 32; i++) {
         if (!strcmp(keywords[i], word)) return true;
     }

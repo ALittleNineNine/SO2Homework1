@@ -4,8 +4,15 @@
 #include <stdbool.h>
 
 int main() {
+    int b;
+    int c;
+    int b = c = 6;
+
+    int a=3, b, c=4;
+
     int a;
-    printf("%d\n", a);
+    int a;
+    printf("%d %d %d\n", a, b, c);
     return 0;
 }
 
