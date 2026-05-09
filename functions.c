@@ -5,7 +5,6 @@ char* remove_comments(char *line) {
     if (line == NULL) {
         return NULL;
     }
-
     //1. Gestione commento //
     for (int i = 0; line[i] != '\0'; i++) {
         if (line[i] == '/' && line[i + 1] == '/') {
@@ -13,7 +12,6 @@ char* remove_comments(char *line) {
             break;
         }
     }
-
     //2. Gestione commento /*
     for (int i = 0; line[i] != '\0'; i++) {
         if (line[i] == '/' && line[i + 1] == '*') {
@@ -26,24 +24,25 @@ char* remove_comments(char *line) {
                     break;
                 }
             }
-
             //copia resto stringa
             if (end != -1) {
                 int k;
                 for (k = 0; line[end + 2 + k] != '\0'; k++) {
                     line[start + k] = line[end + 2 + k];
                 }
-                
                 line[start + k] = '\0';
-            } 
-
+            }
             else {
                 line[start] = '\0';
             }
-
             break;
         }
     }
-
     return line;
+}
+
+//mostra a utente compilazione corretta
+void input() {
+    printf("myPrecompiler -i <file input> [-o <file output>] [-v]\n");
+    printf("L'ordine degli argomenti è definito dall'ordine delle opzioni\n");
 }
