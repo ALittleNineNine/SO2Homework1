@@ -3,7 +3,7 @@
 // typedef  int        intero;
 
         int    main()  {
-    int    zero= 0;
+    int    zero /* sono commento */   = 0;
     char            zeta = 'z' ;
 
     float a, b, c = 1;

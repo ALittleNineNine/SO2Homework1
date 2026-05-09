@@ -2,8 +2,95 @@
 
 int main(int argc, char *argv[]) {
 
+    // inizio ananas
+
+    char *file_input = NULL;
+    char *file_output = NULL;
+    int verbose = 0; //modalità verbose
+
+    for (int i = 1; i < argc; i++) {
+        //opzione input
+        if (strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--in") == 0) {
+            if (i + 1 < argc) {
+                file_input = argv[++i]; //prima incremento e poi viene dato l'argomento 
+            } else {
+                printf("Errore: %s necessario un argomento\n", argv[i]);
+                input();
+                return 1;
+            }
+        }
+        //opzione output
+        else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--out") == 0) {
+            if (i + 1 < argc) {
+                file_output = argv[++i];
+            } else {
+                printf("Errore: %s necessario un argomento\n", argv[i]);
+                input();
+                return 1;
+            }
+        }
+        //opzione verbose
+        else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
+            verbose = 1;
+        }
+        //opzioni raggruppate
+        else if (argv[i][0] == '-' && argv[i][1] != '-' && argv[i][1] != '\0') {
+            int len = strlen(argv[i]);
+            for (int k = 1; k < len; k++) {
+                char current_k = argv[i][k];
+                if (current_k == 'v') {
+                    verbose = 1;
+                }
+                else if (current_k == 'i') {
+                    if (i + 1 < argc) {
+                        file_input = argv[++i];
+                    } else {
+                        printf("Errore: -i necessita di un argomento\n");
+                        input();
+                        return 1;
+                    }
+                }
+                else if (current_k == 'o') {
+                    if (i + 1 < argc) {
+                        file_output = argv[++i];
+                    } else {
+                        printf("Errore: -o necessita di un argomento\n");
+                        input();
+                        return 1;
+                    }
+                }
+                else {
+                    printf("Errore: opzione errata '-%c'\n", current_k);
+                }
+            }
+        }
+        else {
+            printf("Errore: opzione errata %s\n", argv[i]);
+            input();
+            return 1;
+        }
+    }
+    //verifica file input
+        if (file_input == NULL) {
+            printf("Errore: manca file input\n");
+            input();
+            return 1;
+        } 
+        printf("Input: %s\n", file_input);
+        if (file_output) {
+            printf("Output: %s\n", file_output);
+        }
+        if (verbose) {
+            printf("Presente opzione verbose\n");
+        }
+        printf("\n\n\n");
+
+    // fine ananas
+
+    // inizio NineNine
+
     FILE *fp;
-    fp = fopen(argv[1], "r");
+    fp = fopen(file_input, "r");
 
     if (fp == NULL) {
         printf("Errore apertura file.\n");
@@ -24,14 +111,16 @@ int main(int argc, char *argv[]) {
 
         if (strcmp(current_row, new_line)) {
 
+            remove_comments(current_row);
+
             char words[64][64] = {0};
             analyze_row(current_row, words);
 
             if (!strcmp(words[0], "#")) continue;
-            if (!strcmp(words[0], "/")) continue;
+            if (!strcmp(words[0], "\0")) continue;
             if (is_main(words)) continue;
 
-            if (!start_statement_section) {
+            if (!start_statement_section ) {
 
                 if (!end_variable_declaration(words[0])) {
 
@@ -44,6 +133,7 @@ int main(int argc, char *argv[]) {
                     bool flag = false;  // se true, esiste almeno un nome che esisteva già
                     char current_type[512] = {0};
                     array_to_string(type, current_type);
+
                     char current_name[64] = {0};
 
                     for (int i=0; i < 64; i++) {
@@ -69,7 +159,7 @@ int main(int argc, char *argv[]) {
                     }
 
                     // inizio prova
-            
+                    
                     printf("\nParole riga %d: ", row);
                     for(int i=0; i < 64; i++) {
                         if (!strcmp(words[i], "\0")) break;
@@ -86,7 +176,7 @@ int main(int argc, char *argv[]) {
                         printf("%s ", name[i]);
                     }
                     printf("\n");
-
+                    
                     // fine prova
 
                 } else start_statement_section = true;
@@ -131,7 +221,7 @@ int main(int argc, char *argv[]) {
         printf("\n");
         current_err = current_err->next;
     }
-
+    
     // fine parte prova
 
     // pulizia memoria variables
@@ -154,6 +244,8 @@ int main(int argc, char *argv[]) {
     free(var_err_count);
 
     return 0;
+
+    // fine NineNine
 
 }
 

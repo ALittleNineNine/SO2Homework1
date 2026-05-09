@@ -12,6 +12,7 @@ typedef struct variable {
     struct variable *next;
 } variable;
 
+// struct lista concatenata per memorizzare informazioni sugli errori
 typedef struct error {
     bool wrong_type;
     bool wrong_name;
@@ -67,6 +68,13 @@ bool is_main(char words[64][64]);
 
 // data la prima word di una riga, restituisce true se è finita la parte di dichiarazione variabile
 bool end_variable_declaration(char word[]);
+
+// funzione per rimuovere commenti [from ananas]
+char* remove_comments(char *line);
+
+//mostra a utente compilazione corretta [from ananas]
+void input();
+
 
 
 
