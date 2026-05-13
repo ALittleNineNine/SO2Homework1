@@ -100,20 +100,34 @@ int main(int argc, char *argv[]) {
     variable *variables = NULL;
     error *errors = NULL;
     char new_line[] = "\n";
-    char current_row[1024];
+    char *current_row = malloc(1024);
     int row = 0;
     bool start_statement_section = false;   // indica se è iniziata la parte delle istruzioni (fine dichiarazione variabili)
+
+    // array di array di char che contiene le righe spezzate, i tipi e i nomi delle variabili
+    char **words = malloc(128 * sizeof(char *));
+    char **type = malloc(128 * sizeof(char *));
+    char **name = malloc(128 * sizeof(char *));
+    for (int i=0; i < 128; i++) {
+        words[i] = malloc(128 * sizeof(char));
+        type[i] = malloc(128 * sizeof(char));
+        name[i] = malloc(128 * sizeof(char));
+    }
 
     while (!feof(fp)) {
 
         row++;
-        fgets(current_row, sizeof(current_row), fp);
+        fgets(current_row, 1024, fp);
 
         if (strcmp(current_row, new_line)) {
 
             remove_comments(current_row);
 
-            char words[64][64] = {0};
+            // azzerare words
+            for (int i=0; i < 128; i++) {
+                words[i][0] = '\0';
+            }
+
             analyze_row(current_row, words);
 
             if (!strcmp(words[0], "#")) continue;
@@ -124,9 +138,13 @@ int main(int argc, char *argv[]) {
 
                 if (!end_variable_declaration(words[0])) {
 
-                    char type[64][64] = {0};
+                    // azzerare type e name
+                    for (int i=0; i < 128; i++) {
+                        type[i][0] = '\0';
+                        name[i][0] = '\0';
+                    }
+
                     int type_length = get_type(words, type);
-                    char name[64][64] = {0};
                     get_name(words, name, type_length);
 
                     // aggiungere la/le variabile/i se non ci sono errori
@@ -161,17 +179,17 @@ int main(int argc, char *argv[]) {
                     // inizio prova
                     
                     printf("\nParole riga %d: ", row);
-                    for(int i=0; i < 64; i++) {
+                    for(int i=0; i < 128; i++) {
                         if (!strcmp(words[i], "\0")) break;
                         printf("%s ", words[i]);
                     }
                     printf("\nTipo riga %d: ", row);
-                    for(int i=0; i < 64; i++) {
+                    for(int i=0; i < 128; i++) {
                         if (!strcmp(type[i], "\0")) break;
                         printf("%s ", type[i]);
                     }
                     printf("\nNomi riga %d: ", row);
-                    for(int i=0; i < 64; i++) {
+                    for(int i=0; i < 128; i++) {
                         if (!strcmp(name[i], "\0")) break;
                         printf("%s ", name[i]);
                     }
@@ -183,7 +201,7 @@ int main(int argc, char *argv[]) {
 
             } else {
 
-                // parte verifica se la variabile è usato o no (parte dopo dichiarazione variabile) [da implementare]
+                // parte verifica se la variabile è usato o no (parte dopo dichiarazione variabile) [DA IMPLEMENTARE]
 
             }
 
@@ -199,8 +217,6 @@ int main(int argc, char *argv[]) {
     printf("\n--- STATISTICHE DI ELABORAZIONE ---\n\n");
     printf("Numero totale di variabili valide: %d\n", var_err_count[0]);
     printf("Numero totale di errori rilevati: %d\n", var_err_count[1]);
-
-
 
     // inizio parte prova
 
@@ -240,7 +256,18 @@ int main(int argc, char *argv[]) {
         errors = next_err;
     }
 
-    // pulizia memoria var_err_count
+    // pulizie array di array words, type e name
+    for (int i=0; i < 128; i++) {
+        free(words[i]);
+        free(type[i]);
+        free(name[i]);
+    }
+    free(words);
+    free(type);
+    free(name);
+
+    // pulizie memoria variabili
+    free(current_row);
     free(var_err_count);
 
     return 0;

@@ -27,22 +27,22 @@ variable *add_var(variable *next_var, char type[], char name[], int row);
 error *add_error(error *next_err, int row);
 
 // data una riga di codice, li spezza in al massimo in 64 parole
-void analyze_row(char row[], char words[64][64]);
+void analyze_row(char *row, char **words);
 
 /*
     data un array di array di char contenente una riga di dichiarazione variabile, lo mantiene solo la parte type
     ritorna la lunghezza della parte type
 */
-int get_type(char words[64][64], char type[64][64]);
+int get_type(char **words, char **type);
 
 // data un array di array di char contenente una riga di dichiarazione variabile, mantiene solo la parte name
-void get_name(char words[64][64], char name[64][64], int start_idx);
+void get_name(char **words, char **name, int start_idx);
 
 // data una word, restituisce true se word è un tipo base
 bool is_basic_type(char word[]);
 
 // dato un array type, restituisce true se è un type
-bool verify_type(char type[64][64]);
+bool verify_type(char **type);
 
 // data una word, restituisce true se word è una keyword del linguaggio C
 bool is_keyword(char word[]);
@@ -52,19 +52,19 @@ bool is_keyword(char word[]);
     il nome eventualmente non valido viene sostituito inplacemente con "!valid"
     quindi se la funzione restituisce false, non significa automaticamente che non ci siano nomi validi
 */
-bool verify_name(char name[64][64]);
+bool verify_name(char **name);
 
 // data una lista concatenata contenenti varaibili e un nome, restituisce true se il nome appartiene alla lista
 bool existing_var(variable *variables, char name[]);
 
 // trasforma un array in una stringa inplacemente
-void array_to_string(char array[64][64], char string[]);
+void array_to_string(char **array, char string[]);
 
 // calcola il numero di celle nelle due liste variables e errors
 void linked_list_count(int *var_err_count, variable *variables, error *errors);
 
 // ritorna true se in questa riga words contiene main
-bool is_main(char words[64][64]);
+bool is_main(char **words);
 
 // data la prima word di una riga, restituisce true se è finita la parte di dichiarazione variabile
 bool end_variable_declaration(char word[]);

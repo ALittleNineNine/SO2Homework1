@@ -26,12 +26,12 @@ error *add_error(error *next_err, int row) {
 }
 
 // data una riga di codice, li spezza in al massimo in 64 parole
-void analyze_row(char row[], char words[64][64]) {
+void analyze_row(char *row, char **words) {
 
     int flag = 0;       // posizione della parola in array
     int idx_char = 0;   // posizione del char in ogni parola
 
-    for (int i=0; i < strlen(row); i++) {
+    for (int i=0; row[i] != '\0'; i++) {
 
         char current_char = row[i];
         if (current_char != ' ' && current_char != '\t' && current_char != '\n') {      // char da ignorare
@@ -42,12 +42,15 @@ void analyze_row(char row[], char words[64][64]) {
             if (current_char < 48 || (current_char > 57 && current_char < 65) || (current_char > 90 && current_char < 95) ||
                 (current_char > 95 && current_char < 97) || current_char > 122 ||
                 next_char < 48 || (next_char > 57 && next_char < 65) || (next_char > 90 && next_char < 95) ||
-                (next_char > 95 && next_char < 97) || next_char > 122) {
+                (next_char > 95 && next_char < 97) || next_char > 122 || next_char == '\0') {
+                
+                words[flag][idx_char] = '\0';
                 flag++;
                 idx_char = 0;
+
             }
         }
-        if (flag > 64) break;
+        if (flag >= 128) break;
 
     }
 
@@ -57,10 +60,10 @@ void analyze_row(char row[], char words[64][64]) {
     data un array di array di char contenente una riga di dichiarazione variabile, lo mantiene solo la parte type
     ritorna la lunghezza della parte type
 */
-int get_type(char words[64][64], char type[64][64]) {
+int get_type(char **words, char **type) {
 
     int length = 0; // lunghezza della parte type
-    for (int i=0; i < 63; i++) {
+    for (int i=0; i < 127; i++) {
         if (!strcmp(words[i+1], "=") || !strcmp(words[i+1], ",") || !strcmp(words[i+1], ";")) {
             break;
         }
@@ -72,10 +75,10 @@ int get_type(char words[64][64], char type[64][64]) {
 }
 
 // dato un array di array di char contenente una riga di dichiarazione variabile, mantiene solo la parte name
-void get_name(char words[64][64], char name[64][64], int start_idx) {
+void get_name(char **words, char **name, int start_idx) {
 
     int j = 0;  // indice per il vettore name
-    for (int i = start_idx; i < 64; i++) {
+    for (int i = start_idx; i < 128; i++) {
         if (!strcmp(words[i], ";")) break;
         if (!strcmp(words[i], ",")) continue;
         if (!strcmp(words[i], "=")) {
@@ -100,7 +103,7 @@ bool is_basic_type(char word[]) {
 }
 
 // dato un array type, restituisce true se è un type
-bool verify_type(char type[64][64]) {
+bool verify_type(char **type) {
 
     int signed_count = 0;
     int unsigned_count = 0;
@@ -109,7 +112,7 @@ bool verify_type(char type[64][64]) {
     char basic_type[8];
     bool exist_basic_type = false;
     
-    char current_word[64];
+    char current_word[128];
     /*
         questo ciclo for itera su tutte le parole in array type, ne estrae le seguenti informazioni:
         - quantità di modificatori: "signed", "unsigned", "long", "short";
@@ -117,7 +120,7 @@ bool verify_type(char type[64][64]) {
         - un bool che indica se esiste il tipo di base.
         se il tipo di base non esiste, o che esiste più di una, restituisce direttamente false
     */
-    for (int i=0; i < 64; i++) {
+    for (int i=0; i < 128; i++) {
         strcpy(current_word, type[i]);
         if (!strcmp(current_word, "\0")) break;
         if (!strcmp(current_word, "const") || !strcmp(current_word, "volatile")) continue;
@@ -185,13 +188,13 @@ bool is_keyword(char word[]) {
     il nome eventualmente non valido viene sostituito inplacemente con "!valid"
     quindi se la funzione restituisce false, non significa automaticamente che non ci siano nomi validi
 */
-bool verify_name(char name[64][64]) {
+bool verify_name(char **name) {
     
     bool flag = true;   // false se almeno un nome non è valido
 
-    char current_word[64];
+    char current_word[128];
     // itera su tutte le parole in array name, se è una keyword, restituisce false
-    for (int i=0; i < 64; i++) {
+    for (int i=0; i < 128; i++) {
         strcpy(current_word, name[i]);
         if (!strcmp(current_word, "\0")) break;
         if (is_keyword(current_word)) {
@@ -201,7 +204,7 @@ bool verify_name(char name[64][64]) {
 
         char current_char;
         // itera su tutti i char di ogni nome e restituisce false se il nome non è valido
-        for (int j=0; j < 64; j++) {
+        for (int j=0; j < 128; j++) {
             current_char = current_word[j];
             if (current_char == '\0') break;
             if (j == 0 && current_char >= 48 && current_char <= 57) {
@@ -236,8 +239,8 @@ bool existing_var(variable *variables, char name[]) {
 }
 
 // trasforma un array in una stringa inplacemente
-void array_to_string(char array[64][64], char string[]) {
-    for (int i=0; i < 64; i++) {
+void array_to_string(char **array, char string[]) {
+    for (int i=0; i < 128; i++) {
         if (!strcmp(array[i], "\0")) break;
         if (i != 0) strcat(string, " ");
         strcat(string, array[i]);
@@ -262,8 +265,8 @@ void linked_list_count(int *var_err_count, variable *variables, error *errors) {
 }
 
 // ritorna true se in questa riga words contiene main
-bool is_main(char words[64][64]) {
-    for (int i=0; i < 64; i++) {
+bool is_main(char **words) {
+    for (int i=0; i < 128; i++) {
         if (!strcmp(words[i], "\0")) break;
         if (!strcmp(words[i], "main")) return true;
     }
