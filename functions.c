@@ -1,5 +1,7 @@
 #include "header.h"
 
+/* ____________________NineNine____________________ */
+
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
 variable *add_var(variable *next_var, char type[], char name[], int row) {
 
@@ -22,6 +24,16 @@ error *add_error(error *next_err, int row) {
     new_err->row = row;
     new_err->next = next_err;
     return new_err;
+
+}
+
+// crea un nuovo nodo newtype e lo collega in testa alla lista newtype
+newtype *add_newtype(newtype *next_type, char type[]) {
+
+    newtype *new_type = malloc(sizeof(newtype));
+    strcpy(new_type->type, type);
+    new_type->next = next_type;
+    return new_type;
 
 }
 
@@ -277,15 +289,19 @@ bool is_main(char **words) {
 bool end_variable_declaration(char word[]) {
 
     char *keywords[] = {"const", "volatile", "restrict", "signed", "unsigned", "long", "short",
-                        "char", "int", "double", "float", "void", "_Bool", "bool"};
-    for (int i=0; i < 14; i++) {
+                        "char", "int", "double", "float", "void", "_Bool", "bool", "typedef"};
+    for (int i=0; i < 15; i++) {
         if (!strcmp(keywords[i], word)) return false;
     }
     return true;
 
 } // !!! DA RIVEDERE (TIPI ERRONEI NON ESISTENTI FANNO FINIRE DIRETTAMENTE LA PARTE DICHIARAZIONE VARIABILE) !!!
 
-// funzione per rimuovere commenti [from ananas]
+/* ____________________NineNine____________________ */
+
+/* ____________________ananas____________________ */
+
+// funzione per rimuovere commenti
 char* remove_comments(char *line) {
     if (line == NULL) {
         return NULL;
@@ -326,11 +342,15 @@ char* remove_comments(char *line) {
     return line;
 }
 
-// mostra a utente compilazione corretta [from ananas]
+// mostra a utente compilazione corretta
 void input() {
     printf("myPrecompiler -i <file input> [-o <file output>] [-v]\n");
     printf("L'ordine degli argomenti è definito dall'ordine delle opzioni\n");
 }
+
+/* ____________________ananas____________________ */
+
+
 
 
 

@@ -1,6 +1,15 @@
 #include <stdio.h>
 
-// typedef  int        intero;
+typedef  int        intero;
+typedef  unsigned int        Integer;
+typedef  int     abcd;
+
+typedef  struct { } abcdefg;
+
+typedef struct newtype {
+    type[512];
+    struct newtype *next;
+} newtype;
 
         int    main()  {
     int    zero/* sono commento*/   = 0;

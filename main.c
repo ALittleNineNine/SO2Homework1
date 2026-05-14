@@ -99,9 +99,16 @@ int main(int argc, char *argv[]) {
     
     variable *variables = NULL;
     error *errors = NULL;
+    newtype *newtypes = NULL;
+
     char new_line[] = "\n";
+    
     char *current_row = malloc(1024);
     int row = 0;
+    bool row_finished = true;               // viene assegnato false quando inizia un'istruzione a più righe, true normalmente
+    int brace_level = 0;                    // variabile accessoria per verificare se la graffa è chiusa bene
+    bool in_brace = false;                  // indica se è dentro nelle graffe
+    
     bool start_statement_section = false;   // indica se è iniziata la parte delle istruzioni (fine dichiarazione variabili)
 
     // array di array di char che contiene le righe spezzate, i tipi e i nomi delle variabili
@@ -130,11 +137,46 @@ int main(int argc, char *argv[]) {
 
             analyze_row(current_row, words);
 
+            // aggiungere il nuovo tipo creato con typedef, se è struct viene messo il flag row_finished a false
+            if (!strcmp(words[0], "typedef")) {
+                if (!strcmp(words[1], "struct")) {
+                    row_finished = false;
+                    brace_level = 0;
+                } else {
+                    int idx_type = 0;
+                    while (words[idx_type][0] != '\0') idx_type++;
+                    newtype *current_newtype = add_newtype(newtypes, words[idx_type - 2]);
+                    newtypes = current_newtype;
+                    continue;
+                }
+            }
+
+            // trovare il tipo e metterlo in newtypes
+            if (!row_finished) {
+                int idx = 0;
+                while ((words[idx][0] != '\0')) {
+                    if (words[idx][0] == '{') {
+                        brace_level++;
+                        in_brace = true;
+                    }
+                    if (words[idx][0] == '}') brace_level--;
+                    if (brace_level == 0 && in_brace) {
+                        newtype *current_newtype = add_newtype(newtypes, words[idx + 1]);
+                        newtypes = current_newtype;
+                        row_finished = true;
+                        in_brace = false;
+                        break;
+                    }
+                    idx++;
+                }
+                continue;
+            }
+
             if (!strcmp(words[0], "#")) continue;
             if (!strcmp(words[0], "\0")) continue;
             if (is_main(words)) continue;
 
-            if (!start_statement_section ) {
+            if (!start_statement_section) {
 
                 if (!end_variable_declaration(words[0])) {
 
@@ -151,10 +193,9 @@ int main(int argc, char *argv[]) {
                     bool flag = false;  // se true, esiste almeno un nome che esisteva già
                     char current_type[512] = {0};
                     array_to_string(type, current_type);
+                    char current_name[128] = {0};
 
-                    char current_name[64] = {0};
-
-                    for (int i=0; i < 64; i++) {
+                    for (int i=0; i < 128; i++) {
                         strcpy(current_name, name[i]);
                         if (!strcmp(current_name, "\0")) break;
                         if (!strcmp(current_name, "!valid")) continue;
@@ -237,6 +278,16 @@ int main(int argc, char *argv[]) {
         printf("\n");
         current_err = current_err->next;
     }
+
+    printf("\n--------- NEWTYPES ---------\n\n");
+    newtype *current_newtype = newtypes;
+    printf("Tipi typedefati: ");
+    while (current_newtype != NULL) {
+        printf("%s ", current_newtype->type);
+        current_newtype = current_newtype->next;
+    }
+
+    printf("\n\n");
     
     // fine parte prova
 
@@ -254,6 +305,14 @@ int main(int argc, char *argv[]) {
         next_err = errors->next;
         free(errors);
         errors = next_err;
+    }
+
+    // pulizia memoria newtypes
+    newtype *next_newtype;
+    while (newtypes != NULL) {
+        next_newtype = newtypes->next;
+        free(newtypes);
+        newtypes = next_newtype;
     }
 
     // pulizie array di array words, type e name

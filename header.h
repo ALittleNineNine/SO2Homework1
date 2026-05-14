@@ -6,7 +6,7 @@
 // struct lista concatenata per memorizzare informazioni sulle variabili
 typedef struct variable {
     char type[512];
-    char name[64];
+    char name[128];
     bool used;
     int row;
     struct variable *next;
@@ -20,11 +20,20 @@ typedef struct error {
     struct error *next;
 } error;
 
+// struct lista concatenata per memorizzare informazioni sui tipi creati con typedef
+typedef struct newtype {
+    char type[512];
+    struct newtype *next;
+} newtype;
+
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
 variable *add_var(variable *next_var, char type[], char name[], int row);
 
 // crea un nuovo nodo errore e lo collega in testa alla lista errori
 error *add_error(error *next_err, int row);
+
+// crea un nuovo nodo newtype e lo collega in testa alla lista newtype
+newtype *add_newtype(newtype *next_type, char type[]);
 
 // data una riga di codice, li spezza in al massimo in 64 parole
 void analyze_row(char *row, char **words);
