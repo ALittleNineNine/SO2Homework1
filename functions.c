@@ -27,16 +27,6 @@ error *add_error(error *next_err, int row) {
 
 }
 
-// crea un nuovo nodo newtype e lo collega in testa alla lista newtype
-newtype *add_newtype(newtype *next_type, char type[]) {
-
-    newtype *new_type = malloc(sizeof(newtype));
-    strcpy(new_type->type, type);
-    new_type->next = next_type;
-    return new_type;
-
-}
-
 // data una riga di codice, li spezza in al massimo in 64 parole
 void analyze_row(char *row, char **words) {
 
@@ -65,6 +55,40 @@ void analyze_row(char *row, char **words) {
         if (flag >= 128) break;
 
     }
+
+}
+
+// crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef senza struct)
+newtype *add_newtype_no_struct(newtype *newtypes, char **words) {
+
+    int idx_type = 0;
+    while (words[idx_type][0] != '\0') idx_type++;
+
+    newtype *new_type = malloc(sizeof(newtype));
+    strcpy(new_type->type, words[idx_type - 2]);
+    new_type->next = newtypes;
+    return new_type;
+
+}
+
+// crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef con struct)
+newtype *add_newtype_struct(newtype *newtypes, char **words, int idx) {
+
+    newtype *new_type = malloc(sizeof(newtype));
+    strcpy(new_type->type, words[idx + 1]);
+    new_type->next = newtypes;
+    return new_type;
+
+}
+
+// data una word, restituisce true se word è un tipo creato con typedef
+bool is_newtype(char word[], newtype *newtypes) {
+
+    while (newtypes != NULL) {
+        if (!strcmp(newtypes->type, word)) return true;
+        newtypes = newtypes->next;
+    }
+    return false;
 
 }
 
@@ -115,7 +139,7 @@ bool is_basic_type(char word[]) {
 }
 
 // dato un array type, restituisce true se è un type
-bool verify_type(char **type) {
+bool verify_type(char **type, newtype *newtypes) {
 
     int signed_count = 0;
     int unsigned_count = 0;
@@ -123,6 +147,7 @@ bool verify_type(char **type) {
     int short_count = 0;
     char basic_type[8];
     bool exist_basic_type = false;
+    bool exist_newtype = false;
     
     char current_word[128];
     /*
@@ -152,14 +177,22 @@ bool verify_type(char **type) {
             short_count++;
             continue;
         }
-        if (is_basic_type(current_word)) {
+
+        if (is_basic_type(current_word)) {                  // caso word è tipo base
             if (!exist_basic_type) {
                 strcpy(basic_type, current_word);
                 exist_basic_type = true;
                 continue; 
             } else return false;
+        } else if (is_newtype(current_word, newtypes)) {    // caso word è tipo creato con typedef
+            if (!exist_newtype) {
+                exist_newtype = true;
+                continue; 
+            } else return false;
         } else return false;
     }
+
+    if (exist_basic_type && exist_newtype) return false;
 
     // questa marea di if-else serve per verificare se le quantità di modificatore estratti precedentemente sono validi
     if (!strcmp(basic_type, "char")) {
@@ -174,6 +207,8 @@ bool verify_type(char **type) {
     } else if (!strcmp(basic_type, "double")) {
         if (signed_count > 0 || unsigned_count > 0 || long_count > 1 || short_count > 0) return false;
     } else if (!strcmp(basic_type, "float") || !strcmp(basic_type, "void") || !strcmp(basic_type, "_Bool") || !strcmp(basic_type, "bool")) {
+        if (signed_count > 0 || unsigned_count > 0 || long_count > 0 || short_count > 0) return false;
+    } else if (exist_newtype) {
         if (signed_count > 0 || unsigned_count > 0 || long_count > 0 || short_count > 0) return false;
     }
 
@@ -286,13 +321,14 @@ bool is_main(char **words) {
 }
 
 // data la prima word di una riga, restituisce true se è finita la parte di dichiarazione variabile
-bool end_variable_declaration(char word[]) {
+bool end_variable_declaration(char word[], newtype *newtypes) {
 
     char *keywords[] = {"const", "volatile", "restrict", "signed", "unsigned", "long", "short",
                         "char", "int", "double", "float", "void", "_Bool", "bool", "typedef"};
     for (int i=0; i < 15; i++) {
         if (!strcmp(keywords[i], word)) return false;
     }
+    if (is_newtype(word, newtypes)) return false;
     return true;
 
 } // !!! DA RIVEDERE (TIPI ERRONEI NON ESISTENTI FANNO FINIRE DIRETTAMENTE LA PARTE DICHIARAZIONE VARIABILE) !!!

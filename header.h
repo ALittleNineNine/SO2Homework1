@@ -32,11 +32,17 @@ variable *add_var(variable *next_var, char type[], char name[], int row);
 // crea un nuovo nodo errore e lo collega in testa alla lista errori
 error *add_error(error *next_err, int row);
 
-// crea un nuovo nodo newtype e lo collega in testa alla lista newtype
-newtype *add_newtype(newtype *next_type, char type[]);
-
 // data una riga di codice, li spezza in al massimo in 64 parole
 void analyze_row(char *row, char **words);
+
+// crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef senza struct)
+newtype *add_newtype_no_struct(newtype *newtypes, char **words);
+
+// crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef con struct)
+newtype *add_newtype_struct(newtype *newtypes, char **words, int idx);
+
+// data una word, restituisce true se word è un tipo creato con typedef
+bool is_newtype(char word[], newtype *newtypes);
 
 /*
     data un array di array di char contenente una riga di dichiarazione variabile, lo mantiene solo la parte type
@@ -51,7 +57,7 @@ void get_name(char **words, char **name, int start_idx);
 bool is_basic_type(char word[]);
 
 // dato un array type, restituisce true se è un type
-bool verify_type(char **type);
+bool verify_type(char **type, newtype *newtypes);
 
 // data una word, restituisce true se word è una keyword del linguaggio C
 bool is_keyword(char word[]);
@@ -76,7 +82,7 @@ void linked_list_count(int *var_err_count, variable *variables, error *errors);
 bool is_main(char **words);
 
 // data la prima word di una riga, restituisce true se è finita la parte di dichiarazione variabile
-bool end_variable_declaration(char word[]);
+bool end_variable_declaration(char word[], newtype *newtypes);
 
 // funzione per rimuovere commenti [from ananas]
 char* remove_comments(char *line);

@@ -2,7 +2,7 @@
 
 int main(int argc, char *argv[]) {
 
-    // inizio ananas
+/* ____________________ananas____________________ */
 
     char *file_input = NULL;
     char *file_output = NULL;
@@ -85,9 +85,9 @@ int main(int argc, char *argv[]) {
         }
         printf("\n\n\n");
 
-    // fine ananas
+/* ____________________ananas____________________ */
 
-    // inizio NineNine
+/* ____________________NineNine____________________ */
 
     FILE *fp;
     fp = fopen(file_input, "r");
@@ -143,15 +143,12 @@ int main(int argc, char *argv[]) {
                     row_finished = false;
                     brace_level = 0;
                 } else {
-                    int idx_type = 0;
-                    while (words[idx_type][0] != '\0') idx_type++;
-                    newtype *current_newtype = add_newtype(newtypes, words[idx_type - 2]);
-                    newtypes = current_newtype;
+                    newtypes = add_newtype_no_struct(newtypes, words);
                     continue;
                 }
             }
 
-            // trovare il tipo e metterlo in newtypes
+            // trovare il tipo e metterlo in newtypes (caso struct)
             if (!row_finished) {
                 int idx = 0;
                 while ((words[idx][0] != '\0')) {
@@ -161,8 +158,7 @@ int main(int argc, char *argv[]) {
                     }
                     if (words[idx][0] == '}') brace_level--;
                     if (brace_level == 0 && in_brace) {
-                        newtype *current_newtype = add_newtype(newtypes, words[idx + 1]);
-                        newtypes = current_newtype;
+                        newtypes = add_newtype_struct(newtypes, words, idx);
                         row_finished = true;
                         in_brace = false;
                         break;
@@ -178,7 +174,7 @@ int main(int argc, char *argv[]) {
 
             if (!start_statement_section) {
 
-                if (!end_variable_declaration(words[0])) {
+                if (!end_variable_declaration(words[0], newtypes)) {
 
                     // azzerare type e name
                     for (int i=0; i < 128; i++) {
@@ -203,16 +199,15 @@ int main(int argc, char *argv[]) {
                         if (existing_var(variables, current_name)) {
                             flag = true;
                             continue;
-                        } else if (verify_type(type) && verify_name(name)) {
-                            variable *current_var = add_var(variables, current_type, current_name, row);
-                            variables = current_var;
+                        } else if (verify_type(type, newtypes) && verify_name(name)) {
+                            variables = add_var(variables, current_type, current_name, row);
                         }
                     }
 
                     // aggiungere l'errore se esiste
-                    if (!verify_type(type) || !verify_name(name) || flag == true) {
+                    if (!verify_type(type, newtypes) || !verify_name(name) || flag == true) {
                         error *current_err = add_error(errors, row);
-                        if (!verify_type(type)) current_err->wrong_type = true;
+                        if (!verify_type(type, newtypes)) current_err->wrong_type = true;
                         if (!verify_name(name) || flag == true) current_err->wrong_name = true;
                         errors = current_err;
                     }
@@ -238,11 +233,15 @@ int main(int argc, char *argv[]) {
                     
                     // fine prova
 
-                } else start_statement_section = true;
+                } else {
+                    start_statement_section = true;
+                    printf("Riga %d da contare le variabili usate\n", row);
+                }
 
             } else {
 
                 // parte verifica se la variabile è usato o no (parte dopo dichiarazione variabile) [DA IMPLEMENTARE]
+                printf("Riga %d da contare le variabili usate\n", row);
 
             }
 
@@ -331,7 +330,7 @@ int main(int argc, char *argv[]) {
 
     return 0;
 
-    // fine NineNine
+/* ____________________NineNine____________________ */
 
 }
 

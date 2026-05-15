@@ -15,6 +15,10 @@ typedef struct newtype {
     int    zero/* sono commento*/   = 0;
     char            zeta = 'z' ;
 
+    intero nove=9;      // tipo typedefato
+
+    newtype ciao;  // tipo struct typedefato
+
     float a, b, c = 1;
 
     int a=2, c= 1;
@@ -31,10 +35,9 @@ typedef struct newtype {
 
     float double i;
 
-    // intero nove=9;
 
-    const static unsigned        long  long int  *** ***const *const ***** tipo3words=123   ,a,v,    b[12]   ;;;;
-    int a = 0 ;;;;;;;{{{{{{{{{{{}}}}}}}}}}};;
+    // const static unsigned        long  long int  *** ***const *const ***** tipo3words=123   ,a,v,    b[12]   ;;;;
+    // int a = 0 ;;;;;;;{{{{{{{{{{{}}}}}}}}}}};;
 
 
 
