@@ -31,6 +31,8 @@ typedef struct {
     int var_count;
     int err_count;
     int var_unused_count;
+    int wrong_var_name_count;
+    int wrong_var_type_count;
 } processing_statistics;
 
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
@@ -59,6 +61,12 @@ int get_type(char **words, char **type);
 
 // data un array di array di char contenente una riga di dichiarazione variabile, mantiene solo la parte name
 void get_name(char **words, char **name, int start_idx);
+
+// aggiungere la/le variabile/i se non ci sono errori, ritorna la nuova testa della lista
+variable *variables_management(variable *variables, newtype *newtypes, char **type, char **name, int row, bool *flag);
+
+// aggiungere l'errore se esiste, ritorna la nuova testa della lista
+error *errors_management(error *errors, newtype *newtypes, char **type, char **name, int row, bool flag);
 
 // data una word, restituisce true se word è un tipo base
 bool is_basic_type(char word[]);

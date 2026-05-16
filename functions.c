@@ -143,6 +143,43 @@ void get_name(char **words, char **name, int start_idx) {
 
 }
 
+// aggiungere la/le variabile/i se non ci sono errori, ritorna la nuova testa della lista
+variable *variables_management(variable *variables, newtype *newtypes, char **type, char **name, int row, bool *flag) {
+
+    char current_type[512] = {0};
+    array_to_string(type, current_type);
+    char current_name[128] = {0};
+
+    for (int i=0; i < 128; i++) {
+        strcpy(current_name, name[i]);
+        if (!strcmp(current_name, "\0")) break;
+        if (!strcmp(current_name, "!valid")) continue;
+
+        if (existing_var(variables, current_name)) {
+            *flag = true;
+            continue;
+        } else if (verify_type(type, newtypes) && verify_name(name)) {
+            variables = add_var(variables, current_type, current_name, row);
+        }
+    }
+
+    return variables;
+
+}
+
+// aggiungere l'errore se esiste, ritorna la nuova testa della lista
+error *errors_management(error *errors, newtype *newtypes, char **type, char **name, int row, bool flag) {
+
+    if (!verify_type(type, newtypes) || !verify_name(name) || flag == true) {
+        error *current_err = add_error(errors, row);
+        if (!verify_type(type, newtypes)) current_err->wrong_type = true;
+        if (!verify_name(name) || flag == true) current_err->wrong_name = true;
+        errors = current_err;
+    }
+    return errors;
+
+}
+
 // data una word, restituisce true se word è un tipo base
 bool is_basic_type(char word[]) {
 
@@ -323,6 +360,8 @@ void get_processing_statistics(processing_statistics *statistics, variable *vari
     error *current_err = errors;
     while (current_err != NULL) {
         statistics->err_count++;
+        if (current_err->wrong_type) statistics->wrong_var_type_count++;
+        if (current_err->wrong_name) statistics->wrong_var_name_count++;
         current_err = current_err->next;
     }
 

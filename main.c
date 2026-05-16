@@ -180,6 +180,7 @@ int main(int argc, char *argv[]) {
             if (!strcmp(words[0], "\0")) continue;
             if (is_main(words)) continue;
 
+
             if (!start_statement_section) {
 
                 if (!end_variable_declaration(words[0], newtypes)) {
@@ -193,32 +194,13 @@ int main(int argc, char *argv[]) {
                     int type_length = get_type(words, type);
                     get_name(words, name, type_length);
 
-                    // aggiungere la/le variabile/i se non ci sono errori
                     bool flag = false;  // se true, esiste almeno un nome che esisteva già
-                    char current_type[512] = {0};
-                    array_to_string(type, current_type);
-                    char current_name[128] = {0};
 
-                    for (int i=0; i < 128; i++) {
-                        strcpy(current_name, name[i]);
-                        if (!strcmp(current_name, "\0")) break;
-                        if (!strcmp(current_name, "!valid")) continue;
-
-                        if (existing_var(variables, current_name)) {
-                            flag = true;
-                            continue;
-                        } else if (verify_type(type, newtypes) && verify_name(name)) {
-                            variables = add_var(variables, current_type, current_name, row);
-                        }
-                    }
+                    // aggiungere la/le variabile/i se non ci sono errori, ritorna la nuova testa della lista
+                    variables = variables_management(variables, newtypes, type, name, row, &flag);
 
                     // aggiungere l'errore se esiste
-                    if (!verify_type(type, newtypes) || !verify_name(name) || flag == true) {
-                        error *current_err = add_error(errors, row);
-                        if (!verify_type(type, newtypes)) current_err->wrong_type = true;
-                        if (!verify_name(name) || flag == true) current_err->wrong_name = true;
-                        errors = current_err;
-                    }
+                    errors = errors_management(errors, newtypes, type, name, row, flag);
 
 /* ____________________Inizio print prova____________________ */
                     
@@ -264,6 +246,8 @@ int main(int argc, char *argv[]) {
     printf("Numero totale di variabili valide: %d\n", statistics->var_count);
     printf("Numero totale di errori rilevati: %d\n", statistics->err_count);
     printf("Numero di variabili non utilizzate: %d\n", statistics->var_unused_count);
+    printf("Numero di nomi di variabili non corretti: %d\n", statistics->wrong_var_name_count);
+    printf("Numero di tipi di dato non corretti: %d\n", statistics->wrong_var_type_count);
 
 /* ____________________Inizio print prova____________________ */
 
