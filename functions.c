@@ -33,9 +33,25 @@ void analyze_row(char *row, char **words) {
     int flag = 0;       // posizione della parola in array
     int idx_char = 0;   // posizione del char in ogni parola
 
+    bool in_string = false;     // true se siamo in una stringa
+    bool in_char = false;     // true se siamo in un char
+
     for (int i=0; row[i] != '\0'; i++) {
 
         char current_char = row[i];
+        if (current_char == '"') in_string = !in_string;    // gestione alternata quando si incontra "
+        if (in_string) {
+            words[flag][idx_char] = current_char;
+            idx_char++;
+            continue;
+        }
+        if (current_char == '\'') in_char = !in_char;       // gestione alternata quando si incontra '
+        if (in_char) {
+            words[flag][idx_char] = current_char;
+            idx_char++;
+            continue;
+        }
+
         if (current_char != ' ' && current_char != '\t' && current_char != '\n') {      // char da ignorare
             words[flag][idx_char] = current_char;
             idx_char++;
@@ -294,18 +310,19 @@ void array_to_string(char **array, char string[]) {
     }
 }
 
-// calcola il numero di celle nelle due liste variables e errors
-void linked_list_count(int *var_err_count, variable *variables, error *errors) {
+// calcola la statistica di elaborazione
+void get_processing_statistics(processing_statistics *statistics, variable *variables, error *errors) {
 
     variable *current_var = variables;
     while (current_var != NULL) {
-        var_err_count[0]++;
+        statistics->var_count++;
+        if (!current_var->used) statistics->var_unused_count++;
         current_var = current_var->next;
     }
 
     error *current_err = errors;
     while (current_err != NULL) {
-        var_err_count[1]++;
+        statistics->err_count++;
         current_err = current_err->next;
     }
 
@@ -332,6 +349,23 @@ bool end_variable_declaration(char word[], newtype *newtypes) {
     return true;
 
 } // !!! DA RIVEDERE (TIPI ERRONEI NON ESISTENTI FANNO FINIRE DIRETTAMENTE LA PARTE DICHIARAZIONE VARIABILE) !!!
+
+// estrae le variabili usate e aggiorna nella lista concatenata variable->used = true
+void count_used_variables(char **words, variable *variables) {
+
+    for (int i=0; words[i][0] != '\0'; i++) {
+
+        variable *head_vars = variables;        // copy di variables per ogni iterazione (per non perdere la testa)
+        while (head_vars != NULL) {
+            if (!strcmp(words[i], head_vars->name)) {
+                head_vars->used = true;
+                break;
+            }
+            head_vars = head_vars->next;
+        }
+    }
+
+}
 
 /* ____________________NineNine____________________ */
 

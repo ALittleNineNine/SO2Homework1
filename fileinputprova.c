@@ -17,9 +17,9 @@ typedef struct newtype {
 
     intero nove=9;      // tipo typedefato
 
-    newtype ciao;  // tipo struct typedefato
+    newtype ciao = "qwe   rty";  // tipo struct typedefato
 
-    float a, b, c = 1;
+    float a, b, c = 1, d;
 
     int a=2, c= 1;
 
@@ -33,7 +33,7 @@ typedef struct newtype {
     unsigned int;
     long long while;
 
-    float double i;
+    float double 654s;
 
 
     // const static unsigned        long  long int  *** ***const *const ***** tipo3words=123   ,a,v,    b[12]   ;;;;

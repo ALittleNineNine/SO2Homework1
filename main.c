@@ -97,6 +97,8 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     
+/* ____________________Inizio inizializzazione variabili____________________ */
+
     variable *variables = NULL;
     error *errors = NULL;
     newtype *newtypes = NULL;
@@ -121,6 +123,8 @@ int main(int argc, char *argv[]) {
         name[i] = malloc(128 * sizeof(char));
     }
 
+/* ____________________Fine inizializzazione variabili____________________ */
+
     while (!feof(fp)) {
 
         row++;
@@ -137,6 +141,8 @@ int main(int argc, char *argv[]) {
 
             analyze_row(current_row, words);
 
+/* ____________________Inizio gestione typedef____________________ */
+
             // aggiungere il nuovo tipo creato con typedef, se è struct viene messo il flag row_finished a false
             if (!strcmp(words[0], "typedef")) {
                 if (!strcmp(words[1], "struct")) {
@@ -148,7 +154,7 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            // trovare il tipo e metterlo in newtypes (caso struct)
+            // trovare il tipo struct e metterlo in newtypes
             if (!row_finished) {
                 int idx = 0;
                 while ((words[idx][0] != '\0')) {
@@ -167,6 +173,8 @@ int main(int argc, char *argv[]) {
                 }
                 continue;
             }
+
+/* ____________________Fine gestione typedef____________________ */
 
             if (!strcmp(words[0], "#")) continue;
             if (!strcmp(words[0], "\0")) continue;
@@ -212,7 +220,7 @@ int main(int argc, char *argv[]) {
                         errors = current_err;
                     }
 
-                    // inizio prova
+/* ____________________Inizio print prova____________________ */
                     
                     printf("\nParole riga %d: ", row);
                     for(int i=0; i < 128; i++) {
@@ -231,18 +239,16 @@ int main(int argc, char *argv[]) {
                     }
                     printf("\n");
                     
-                    // fine prova
+/* ____________________Fine print prova____________________ */
 
                 } else {
                     start_statement_section = true;
-                    printf("Riga %d da contare le variabili usate\n", row);
+                    count_used_variables(words, variables);
                 }
 
             } else {
-
-                // parte verifica se la variabile è usato o no (parte dopo dichiarazione variabile) [DA IMPLEMENTARE]
-                printf("Riga %d da contare le variabili usate\n", row);
-
+                // parte verifica se la variabile è usato o no (parte dopo dichiarazione variabile)
+                count_used_variables(words, variables);
             }
 
         }
@@ -251,20 +257,22 @@ int main(int argc, char *argv[]) {
 
     fclose(fp);
     
-    int *var_err_count = calloc(2, sizeof(int));    // [var_count, err_count]
-    linked_list_count(var_err_count, variables, errors);
+    processing_statistics *statistics = malloc(sizeof(processing_statistics));
+    get_processing_statistics(statistics, variables, errors);
 
     printf("\n--- STATISTICHE DI ELABORAZIONE ---\n\n");
-    printf("Numero totale di variabili valide: %d\n", var_err_count[0]);
-    printf("Numero totale di errori rilevati: %d\n", var_err_count[1]);
+    printf("Numero totale di variabili valide: %d\n", statistics->var_count);
+    printf("Numero totale di errori rilevati: %d\n", statistics->err_count);
+    printf("Numero di variabili non utilizzate: %d\n", statistics->var_unused_count);
 
-    // inizio parte prova
+/* ____________________Inizio print prova____________________ */
 
     printf("\n--------- VARIABLES ---------\n\n");
     variable *current_var = variables;
     while (current_var != NULL) {
         printf("Tipo di riga %d: %s\n", current_var->row, current_var->type);
         printf("Nome di riga %d: %s\n", current_var->row, current_var->name);
+        printf("Usato? %d\n", current_var->used);
         printf("\n");
         current_var = current_var->next;
     }
@@ -288,7 +296,9 @@ int main(int argc, char *argv[]) {
 
     printf("\n\n");
     
-    // fine parte prova
+/* ____________________Fine print prova____________________ */
+
+/* ____________________Inizio pulizia memoria____________________ */
 
     // pulizia memoria variables
     variable *next_var;
@@ -326,7 +336,9 @@ int main(int argc, char *argv[]) {
 
     // pulizie memoria variabili
     free(current_row);
-    free(var_err_count);
+    free(statistics);
+
+/* ____________________Fine pulizia memoria____________________ */
 
     return 0;
 

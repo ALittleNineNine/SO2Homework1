@@ -26,6 +26,13 @@ typedef struct newtype {
     struct newtype *next;
 } newtype;
 
+// struct per memorizzare informazioni sulle statistiche di elaborazione
+typedef struct {
+    int var_count;
+    int err_count;
+    int var_unused_count;
+} processing_statistics;
+
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
 variable *add_var(variable *next_var, char type[], char name[], int row);
 
@@ -75,14 +82,17 @@ bool existing_var(variable *variables, char name[]);
 // trasforma un array in una stringa inplacemente
 void array_to_string(char **array, char string[]);
 
-// calcola il numero di celle nelle due liste variables e errors
-void linked_list_count(int *var_err_count, variable *variables, error *errors);
+// calcola la statistica di elaborazione
+void get_processing_statistics(processing_statistics *statistics, variable *variables, error *errors);
 
 // ritorna true se in questa riga words contiene main
 bool is_main(char **words);
 
 // data la prima word di una riga, restituisce true se è finita la parte di dichiarazione variabile
 bool end_variable_declaration(char word[], newtype *newtypes);
+
+// estrae le variabili usate e aggiorna nella lista concatenata variable->used = true
+void count_used_variables(char **words, variable *variables);
 
 // funzione per rimuovere commenti [from ananas]
 char* remove_comments(char *line);
