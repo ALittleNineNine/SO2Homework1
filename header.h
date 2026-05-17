@@ -90,6 +90,9 @@ bool existing_var(variable *variables, char name[]);
 // trasforma un array in una stringa inplacemente
 void array_to_string(char **array, char string[]);
 
+// date le liste concatenate variables e errors, li mette in ordine invertito
+void reverse_linked_list(variable **variables, error **errors);
+
 // calcola la statistica di elaborazione
 void get_processing_statistics(processing_statistics *statistics, variable *variables, error *errors);
 
@@ -101,6 +104,12 @@ bool end_variable_declaration(char word[], newtype *newtypes);
 
 // estrae le variabili usate e aggiorna nella lista concatenata variable->used = true
 void count_used_variables(char **words, variable *variables);
+
+// TEST FOR IMPLEMENTATION
+void test_array_of_array(char **words, char **type, char **name, int row);
+
+// TEST FOR IMPLEMENTATION
+void test_linked_lists(variable *variables, error *errors, newtype *newtypes);
 
 // funzione per rimuovere commenti [from ananas]
 char* remove_comments(char *line);

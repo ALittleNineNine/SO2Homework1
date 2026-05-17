@@ -199,29 +199,11 @@ int main(int argc, char *argv[]) {
                     // aggiungere la/le variabile/i se non ci sono errori, ritorna la nuova testa della lista
                     variables = variables_management(variables, newtypes, type, name, row, &flag);
 
-                    // aggiungere l'errore se esiste
+                    // aggiungere l'errore se esiste, ritorna la nuova testa della lista
                     errors = errors_management(errors, newtypes, type, name, row, flag);
-
-/* ____________________Inizio print prova____________________ */
                     
-                    printf("\nParole riga %d: ", row);
-                    for(int i=0; i < 128; i++) {
-                        if (!strcmp(words[i], "\0")) break;
-                        printf("%s ", words[i]);
-                    }
-                    printf("\nTipo riga %d: ", row);
-                    for(int i=0; i < 128; i++) {
-                        if (!strcmp(type[i], "\0")) break;
-                        printf("%s ", type[i]);
-                    }
-                    printf("\nNomi riga %d: ", row);
-                    for(int i=0; i < 128; i++) {
-                        if (!strcmp(name[i], "\0")) break;
-                        printf("%s ", name[i]);
-                    }
-                    printf("\n");
-                    
-/* ____________________Fine print prova____________________ */
+                    // TEST FOR IMPLEMENTATION
+                    // test_array_of_array(words, type, name, row);
 
                 } else {
                     start_statement_section = true;
@@ -238,49 +220,52 @@ int main(int argc, char *argv[]) {
     }
 
     fclose(fp);
+
+    // variables e errors sono memorizzati nell'ordine decrescente, qui vengono reversed
+    reverse_linked_list(&variables, &errors);
     
     processing_statistics *statistics = malloc(sizeof(processing_statistics));
     get_processing_statistics(statistics, variables, errors);
 
-    printf("\n--- STATISTICHE DI ELABORAZIONE ---\n\n");
-    printf("Numero totale di variabili valide: %d\n", statistics->var_count);
-    printf("Numero totale di errori rilevati: %d\n", statistics->err_count);
-    printf("Numero di variabili non utilizzate: %d\n", statistics->var_unused_count);
-    printf("Numero di nomi di variabili non corretti: %d\n", statistics->wrong_var_name_count);
-    printf("Numero di tipi di dato non corretti: %d\n", statistics->wrong_var_type_count);
+    printf("\n---------- STATISTICHE DI ELABORAZIONE -----------\n\n");
 
-/* ____________________Inizio print prova____________________ */
+    printf("Numero totale di variabili valide:\t\t%d\n", statistics->var_count);
+    printf("Numero totale di errori rilevati:\t\t%d\n", statistics->err_count);
+    printf("Numero di variabili non utilizzate:\t\t%d\n", statistics->var_unused_count);
+    printf("Numero di nomi di variabili non corretti:\t%d\n", statistics->wrong_var_name_count);
+    printf("Numero di tipi di dato non corretti:\t\t%d\n", statistics->wrong_var_type_count);
 
-    printf("\n--------- VARIABLES ---------\n\n");
-    variable *current_var = variables;
-    while (current_var != NULL) {
-        printf("Tipo di riga %d: %s\n", current_var->row, current_var->type);
-        printf("Nome di riga %d: %s\n", current_var->row, current_var->name);
-        printf("Usato? %d\n", current_var->used);
-        printf("\n");
-        current_var = current_var->next;
-    }
+    printf("\n--------------------------------------------------\n");
+    
+    printf("\n--- ERRORI RILEVATI ---\n\n");
 
-    printf("\n--------- ERRORS ---------\n\n");
     error *current_err = errors;
     while (current_err != NULL) {
-        printf("Errore tipo in riga %d: %d\n", current_err->row, current_err->wrong_type);
-        printf("Errore nome in riga %d: %d\n", current_err->row, current_err->wrong_name);
-        printf("\n");
+        if (current_err->wrong_type) {
+            printf("Errore tipo in riga %d\n", current_err->row);
+        }
+        if (current_err->wrong_name) {
+            printf("Errore nome in riga %d\n", current_err->row);
+        }
         current_err = current_err->next;
     }
 
-    printf("\n--------- NEWTYPES ---------\n\n");
-    newtype *current_newtype = newtypes;
-    printf("Tipi typedefati: ");
-    while (current_newtype != NULL) {
-        printf("%s ", current_newtype->type);
-        current_newtype = current_newtype->next;
+    printf("\n-----------------------\n");
+    
+    printf("\n------ VARIABILI NON UTILIZZATE ------\n\n");
+
+    variable *current_var = variables;
+    while (current_var != NULL) {
+        if (!current_var->used) {
+            printf("%s\t\tdichiarata in riga %d\n", current_var->name, current_var->row);
+        }
+        current_var = current_var->next;
     }
 
-    printf("\n\n");
-    
-/* ____________________Fine print prova____________________ */
+    printf("\n--------------------------------------\n\n");
+
+    // TEST FOR IMPLEMENTATION
+    // test_linked_lists(variables, errors, newtypes);
 
 /* ____________________Inizio pulizia memoria____________________ */
 

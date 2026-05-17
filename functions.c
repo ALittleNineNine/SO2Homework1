@@ -347,6 +347,37 @@ void array_to_string(char **array, char string[]) {
     }
 }
 
+// date le liste concatenate variables e errors, li mette in ordine invertito
+void reverse_linked_list(variable **variables, error **errors) {
+
+    variable *prev_var = NULL;
+    variable *current_var = *variables;
+    variable *next_var = NULL;
+
+    while (current_var != NULL) {
+        next_var = current_var->next;
+        current_var->next = prev_var;
+        prev_var = current_var;
+        current_var = next_var;
+    }
+
+    *variables = prev_var;
+
+    error *prev_err = NULL;
+    error *current_err = *errors;
+    error *next_err = NULL;
+
+    while (current_err != NULL) {
+        next_err = current_err->next;
+        current_err->next = prev_err;
+        prev_err = current_err;
+        current_err = next_err;
+    }
+
+    *errors = prev_err;
+
+}
+
 // calcola la statistica di elaborazione
 void get_processing_statistics(processing_statistics *statistics, variable *variables, error *errors) {
 
@@ -403,6 +434,62 @@ void count_used_variables(char **words, variable *variables) {
             head_vars = head_vars->next;
         }
     }
+
+}
+
+// TEST FOR IMPLEMENTATION
+void test_array_of_array(char **words, char **type, char **name, int row) {
+
+    printf("\nParole riga %d: ", row);
+    for(int i=0; i < 128; i++) {
+        if (!strcmp(words[i], "\0")) break;
+        printf("%s ", words[i]);
+    }
+    printf("\nTipo riga %d: ", row);
+    for(int i=0; i < 128; i++) {
+        if (!strcmp(type[i], "\0")) break;
+        printf("%s ", type[i]);
+    }
+    printf("\nNomi riga %d: ", row);
+    for(int i=0; i < 128; i++) {
+        if (!strcmp(name[i], "\0")) break;
+        printf("%s ", name[i]);
+    }
+    printf("\n\n");
+
+}
+
+// TEST FOR IMPLEMENTATION
+void test_linked_lists(variable *variables, error *errors, newtype *newtypes) {
+
+    printf("\n--------- VARIABLES ---------\n\n");
+    variable *current_var = variables;
+    while (current_var != NULL) {
+        printf("Tipo di riga %d: %s\n", current_var->row, current_var->type);
+        printf("Nome di riga %d: %s\n", current_var->row, current_var->name);
+        printf("Usato? %d\n", current_var->used);
+        printf("\n");
+        current_var = current_var->next;
+    }
+
+    printf("\n--------- ERRORS ---------\n\n");
+    error *current_err = errors;
+    while (current_err != NULL) {
+        printf("Errore tipo in riga %d: %d\n", current_err->row, current_err->wrong_type);
+        printf("Errore nome in riga %d: %d\n", current_err->row, current_err->wrong_name);
+        printf("\n");
+        current_err = current_err->next;
+    }
+
+    printf("\n--------- NEWTYPES ---------\n\n");
+    newtype *current_newtype = newtypes;
+    printf("Tipi typedefati: ");
+    while (current_newtype != NULL) {
+        printf("%s ", current_newtype->type);
+        current_newtype = current_newtype->next;
+    }
+
+    printf("\n\n");
 
 }
 
