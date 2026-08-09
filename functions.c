@@ -27,18 +27,28 @@ error *add_error(error *next_err, int row) {
 
 }
 
-// data una riga di codice, li spezza in al massimo in 64 parole
-void analyze_row(char *row, char **words) {
+/*
+    data una riga di codice, li spezza in al massimo in 64 parole:
+    - se start_statement_section == true: le parole vengono spezzate in base anche a simboli speciali;
+    - altrimenti: le parole vengono spezzate solo mediante ' ', '\t', '\n', ';', '=', '\0' e '*';
+    - quando si incontrano '...' (char), "..." (array di char), {...} (inizializzazione di array, viene verificato se lo è davvero)
+        vengono uniti in un unica word.
+*/
+void analyze_row(char *row, char **words, bool start_statement_section) {
 
     int flag = 0;       // posizione della parola in array
     int idx_char = 0;   // posizione del char in ogni parola
 
     bool in_string = false;     // true se siamo in una stringa
-    bool in_char = false;     // true se siamo in un char
+    bool in_char = false;       // true se siamo in un char
+
+    bool in_brace = false;      // true se siamo in una graffa (per inizializzazione array)
+    bool in_bracket = false;    // true se siamo in una quadra (per definizione array)
 
     for (int i=0; row[i] != '\0'; i++) {
 
         char current_char = row[i];
+
         if (current_char == '"') in_string = !in_string;    // gestione alternata quando si incontra "
         if (in_string) {
             words[flag][idx_char] = current_char;
@@ -52,19 +62,71 @@ void analyze_row(char *row, char **words) {
             continue;
         }
 
+        // gestione parentesi graffe (per inizializzazione array)
+        if (!start_statement_section && current_char == '{' && flag > 0 && !strcmp(words[flag-1], "=")) {
+            for (int j=0; j<128; j++) {
+                if (words[j][0] == '[') in_brace = true;
+            }
+        }
+        if (in_brace) {
+            words[flag][idx_char] = current_char;
+            if (current_char == '}') {
+                words[flag][idx_char] = current_char;
+                in_brace = false;
+                words[flag][idx_char+1] = '\0';
+                flag++;
+                idx_char = 0;
+            } else {
+                idx_char++;
+            }
+            continue;
+        }
+
+        // gestione parentesi quadre (per definizione array)
+        if (!start_statement_section && current_char == '[') in_bracket = true;
+        if (in_bracket) {
+            words[flag][idx_char] = current_char;
+            if (current_char == ']') {
+                in_bracket = false;
+                words[flag][idx_char+1] = '\0';
+                flag++;
+                idx_char = 0;
+            } else {
+                idx_char++;
+            }
+            continue;
+        }
+
+        // gestione principale
         if (current_char != ' ' && current_char != '\t' && current_char != '\n') {      // char da ignorare
             words[flag][idx_char] = current_char;
             idx_char++;
 
             char next_char = row[i+1];
-            if (current_char < 48 || (current_char > 57 && current_char < 65) || (current_char > 90 && current_char < 95) ||
-                (current_char > 95 && current_char < 97) || current_char > 122 ||
-                next_char < 48 || (next_char > 57 && next_char < 65) || (next_char > 90 && next_char < 95) ||
-                (next_char > 95 && next_char < 97) || next_char > 122 || next_char == '\0') {
-                
-                words[flag][idx_char] = '\0';
-                flag++;
-                idx_char = 0;
+            if (start_statement_section) {      // gestione se andare alla prossima word
+
+                if (current_char < 48 || (current_char > 57 && current_char < 65) || (current_char > 90 && current_char < 95) ||
+                    (current_char > 95 && current_char < 97) || current_char > 122 ||
+                    next_char < 48 || (next_char > 57 && next_char < 65) || (next_char > 90 && next_char < 95) ||
+                    (next_char > 95 && next_char < 97) || next_char > 122 || next_char == '\0') {
+                    
+                    words[flag][idx_char] = '\0';
+                    flag++;
+                    idx_char = 0;
+
+                }
+
+            } else {
+
+                if (next_char == ' ' || next_char == '\t' || next_char == '\n' || next_char == ';' || next_char == '\0' ||
+                    current_char == '*' || next_char == '*' || current_char == '=' || next_char == '=' ||
+                    next_char == '{' || current_char == '}' || next_char == '[' || current_char == ']') {
+
+                    words[flag][idx_char] = '\0';
+                    flag++;
+                    idx_char = 0;
+
+                }
 
             }
         }
@@ -408,17 +470,20 @@ bool is_main(char **words) {
 }
 
 // data la prima word di una riga, restituisce true se è finita la parte di dichiarazione variabile
-bool end_variable_declaration(char word[], newtype *newtypes) {
+bool end_variable_declaration(char word[], variable *variables) {
 
-    char *keywords[] = {"const", "volatile", "restrict", "signed", "unsigned", "long", "short",
-                        "char", "int", "double", "float", "void", "_Bool", "bool", "typedef"};
-    for (int i=0; i < 15; i++) {
-        if (!strcmp(keywords[i], word)) return false;
+    char *keywords[] = {"if", "do", "while", "for", "switch", "return", "sizeof"};
+
+    for (int i=0; i < 7; i++) {
+        if (!strcmp(keywords[i], word)) return true;
     }
-    if (is_newtype(word, newtypes)) return false;
-    return true;
+    while (variables != NULL) {
+        if (!strcmp(variables->name, word)) return true;
+        variables = variables->next;
+    }
+    return false;
 
-} // !!! DA RIVEDERE (TIPI ERRONEI NON ESISTENTI FANNO FINIRE DIRETTAMENTE LA PARTE DICHIARAZIONE VARIABILE) !!!
+}
 
 // estrae le variabili usate e aggiorna nella lista concatenata variable->used = true
 void count_used_variables(char **words, variable *variables) {
@@ -443,17 +508,17 @@ void test_array_of_array(char **words, char **type, char **name, int row) {
     printf("\nParole riga %d: ", row);
     for(int i=0; i < 128; i++) {
         if (!strcmp(words[i], "\0")) break;
-        printf("%s ", words[i]);
+        printf("<%s> ", words[i]);
     }
     printf("\nTipo riga %d: ", row);
     for(int i=0; i < 128; i++) {
         if (!strcmp(type[i], "\0")) break;
-        printf("%s ", type[i]);
+        printf("<%s> ", type[i]);
     }
     printf("\nNomi riga %d: ", row);
     for(int i=0; i < 128; i++) {
         if (!strcmp(name[i], "\0")) break;
-        printf("%s ", name[i]);
+        printf("<%s> ", name[i]);
     }
     printf("\n\n");
 

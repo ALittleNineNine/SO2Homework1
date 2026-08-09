@@ -33,7 +33,7 @@ unsigned int positivo;                  // type valido     | name valido     | n
 byte byteNonEsiste;                     // type non valido | name valido     | --
 floatt floattNonEsiste;                 // type non valido | name valido     | --
 int 123numeriIniz;                      // type valido     | name non valido | --
-int at@non valido;                      // type valido     | name non valido | --
+int at@nonValido;                       // type valido     | name non valido | --
 tipoErrato 2doppioErrore;               // type non valido | name non valido | --
 
 /* __________SEZIONE VARIABILI GLOBALI (TIPI UTENTE)__________ */
@@ -48,13 +48,13 @@ InteroSenzaSegno mioPositivo;           // type valido     | name valido     | n
 int vettoreIntero[5];                   // type valido     | name valido     | non verrà usata
 char *puntatoreCarattere;               // type valido     | name valido     | verrà usata
 Punto *puntatoreMioPunto;               // type valido     | name valido     | non verrà usata
-int matriceIntero[3][3];                // type valido     | name valido     | non verrà usata
+int matriceIntero[3] [3];               // type valido     | name valido     | non verrà usata
 float *2numeroIniz;                     // type valido     | name non valido | --
-unsignedd int arrTipoErrato[3];         // type non valido | name valido     | --
+unsignedd int arrTipoErrato [3];        // type non valido | name valido     | --
 
 /* __________SEZIONE VARIABILI GLOBALI (DICHIARAZIONE CON SPAZI VUOTI)__________ */
    
-int	            varConTab;			    // type valido     | name valido     | non verrà usata
+int	            varConTab   ;			// type valido     | name valido     | non verrà usata
 int        varConSpaziMultipli;         // type valido     | name valido     | non verrà usata
 int ;                                   // type valido     | name non valido | --
 
@@ -66,7 +66,7 @@ const volatile unsigned const long const long float tipoIllegale;               
 /* __________SEZIONE VARIABILI GLOBALI (DICHIARAZIONE E INIZIALIZZAZIONE)__________ */
 
 int interoConInizializ = 100;           // type valido     | name valido     | non verrà usata
-Intero mioInteroConInizializ = 99;      // type valido     | name valido     | non verrà usata
+Intero mioInteroConInizializ=99;        // type valido     | name valido     | non verrà usata
 float 4erroreConInit = 3.14;            // type valido     | name non valido | --
 byte doppio$errore = 1;                 // type non valido | name non valido | --
 
@@ -98,7 +98,7 @@ int main() {
 
     int arrayLocale[5];                 // type valido     | name valido     | verrà usata
     int *puntatoreLocale;               // type valido     | name valido     | verrà usata
-    char stringLocale[20];              // type valido     | name valido     | verrà usata
+    char stringLocale [20];             // type valido     | name valido     | verrà usata
     float matriceLocale[3][3];          // type valido     | name valido     | non verrà usata
     int contatoreLocale;                // type valido     | name valido     | verrà usata
 
@@ -198,6 +198,7 @@ int main() {
     *puntatoreConInizializz = x;
 
     return 0;
+
 }
 
 

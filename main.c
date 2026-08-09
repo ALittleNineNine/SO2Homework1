@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     
-/* ____________________Inizio inizializzazione variabili____________________ */
+    /* ____________________Inizio inizializzazione variabili____________________ */
 
     variable *variables = NULL;
     error *errors = NULL;
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
         name[i] = malloc(128 * sizeof(char));
     }
 
-/* ____________________Fine inizializzazione variabili____________________ */
+    /* ____________________Fine inizializzazione variabili____________________ */
 
     while (!feof(fp)) {
 
@@ -139,9 +139,9 @@ int main(int argc, char *argv[]) {
                 words[i][0] = '\0';
             }
 
-            analyze_row(current_row, words);
+            analyze_row(current_row, words, start_statement_section);
 
-/* ____________________Inizio gestione typedef____________________ */
+            /* ____________________Inizio gestione typedef____________________ */
 
             // aggiungere il nuovo tipo creato con typedef, se è struct viene messo il flag row_finished a false
             if (!strcmp(words[0], "typedef")) {
@@ -174,16 +174,16 @@ int main(int argc, char *argv[]) {
                 continue;
             }
 
-/* ____________________Fine gestione typedef____________________ */
+            /* ____________________Fine gestione typedef____________________ */
 
-            if (!strcmp(words[0], "#")) continue;
+            if (!strcmp(words[0], "#include")) continue;
             if (!strcmp(words[0], "\0")) continue;
             if (is_main(words)) continue;
 
 
             if (!start_statement_section) {
 
-                if (!end_variable_declaration(words[0], newtypes)) {
+                if (!end_variable_declaration(words[0], variables)) {
 
                     // azzerare type e name
                     for (int i=0; i < 128; i++) {
@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
                     errors = errors_management(errors, newtypes, type, name, row, flag);
                     
                     // TEST FOR IMPLEMENTATION
-                    // test_array_of_array(words, type, name, row);
+                    test_array_of_array(words, type, name, row);
 
                 } else {
                     start_statement_section = true;
@@ -252,22 +252,22 @@ int main(int argc, char *argv[]) {
 
     printf("\n-----------------------\n");
     
-    printf("\n------ VARIABILI NON UTILIZZATE ------\n\n");
+    printf("\n-------------- VARIABILI NON UTILIZZATE --------------\n\n");
 
     variable *current_var = variables;
     while (current_var != NULL) {
         if (!current_var->used) {
-            printf("%s\t\tdichiarata in riga %d\n", current_var->name, current_var->row);
+            printf("%s\t\t\tdichiarata in riga %d\n", current_var->name, current_var->row);
         }
         current_var = current_var->next;
     }
 
-    printf("\n--------------------------------------\n\n");
+    printf("\n------------------------------------------------------\n\n");
 
     // TEST FOR IMPLEMENTATION
     // test_linked_lists(variables, errors, newtypes);
 
-/* ____________________Inizio pulizia memoria____________________ */
+    /* ____________________Inizio pulizia memoria____________________ */
 
     // pulizia memoria variables
     variable *next_var;
@@ -307,7 +307,7 @@ int main(int argc, char *argv[]) {
     free(current_row);
     free(statistics);
 
-/* ____________________Fine pulizia memoria____________________ */
+    /* ____________________Fine pulizia memoria____________________ */
 
     return 0;
 

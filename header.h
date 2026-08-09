@@ -41,8 +41,14 @@ variable *add_var(variable *next_var, char type[], char name[], int row);
 // crea un nuovo nodo errore e lo collega in testa alla lista errori
 error *add_error(error *next_err, int row);
 
-// data una riga di codice, li spezza in al massimo in 64 parole
-void analyze_row(char *row, char **words);
+/*
+    data una riga di codice, li spezza in al massimo in 64 parole:
+    - se start_statement_section == true: le parole vengono spezzate in base anche a simboli speciali;
+    - altrimenti: le parole vengono spezzate solo mediante ' ', '\t', '\n', ';', '=', '\0' e '*';
+    - quando si incontrano '...' (char), "..." (array di char), {...} (inizializzazione di array, viene verificato se lo è davvero)
+        vengono uniti in un unica word.
+*/
+void analyze_row(char *row, char **words, bool start_statement_section);
 
 // crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef senza struct)
 newtype *add_newtype_no_struct(newtype *newtypes, char **words);
@@ -100,7 +106,7 @@ void get_processing_statistics(processing_statistics *statistics, variable *vari
 bool is_main(char **words);
 
 // data la prima word di una riga, restituisce true se è finita la parte di dichiarazione variabile
-bool end_variable_declaration(char word[], newtype *newtypes);
+bool end_variable_declaration(char word[], variable *variables);
 
 // estrae le variabili usate e aggiorna nella lista concatenata variable->used = true
 void count_used_variables(char **words, variable *variables);
