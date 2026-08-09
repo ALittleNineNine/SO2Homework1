@@ -45,7 +45,7 @@ error *add_error(error *next_err, int row);
     data una riga di codice, li spezza in al massimo in 64 parole:
     - se start_statement_section == true: le parole vengono spezzate in base anche a simboli speciali;
     - altrimenti: le parole vengono spezzate solo mediante ' ', '\t', '\n', ';', '=', '\0' e '*';
-    - quando si incontrano '...' (char), "..." (array di char), {...} (inizializzazione di array, viene verificato se lo è davvero)
+    - quando si incontrano '...' (char), "..." (array di char), [...] e {...} (dichiarazione e inizializzazione di array, verificato se lo è davvero)
         vengono uniti in un unica word.
 */
 void analyze_row(char *row, char **words, bool start_statement_section);
