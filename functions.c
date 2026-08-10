@@ -118,8 +118,8 @@ void analyze_row(char *row, char **words, bool start_statement_section) {
 
             } else {
 
-                if (next_char == ' ' || next_char == '\t' || next_char == '\n' || next_char == ';' || next_char == '\0' ||
-                    current_char == '*' || next_char == '*' || current_char == '=' || next_char == '=' ||
+                if (next_char == ' ' || next_char == '\t' || next_char == '\n' || next_char == ';' || next_char == '\0' || next_char == '(' ||
+                    current_char == '*' || next_char == '*' || current_char == '=' || next_char == '=' || current_char == ',' || next_char == ',' ||
                     next_char == '{' || current_char == '}' || next_char == '[' || current_char == ']') {
 
                     words[flag][idx_char] = '\0';
@@ -176,9 +176,14 @@ bool is_newtype(char word[], newtype *newtypes) {
 */
 int get_type(char **words, char **type) {
 
+    if (!strcmp(words[1], ";")) {       // caso in cui non è stato indicato un nome per tale tipo
+        strcat(type[0], words[0]);
+        return 1;
+    }
+
     int length = 0; // lunghezza della parte type
     for (int i=0; i < 127; i++) {
-        if (!strcmp(words[i+1], "=") || !strcmp(words[i+1], ",") || !strcmp(words[i+1], ";")) {
+        if (!strcmp(words[i+1], "=") || !strcmp(words[i+1], ",") || !strcmp(words[i+1], ";") || words[i+1][0] == '[' || words[i][0] == '*') {
             break;
         }
         strcat(type[i], words[i]);
@@ -199,6 +204,7 @@ void get_name(char **words, char **name, int start_idx) {
             i++;
             continue;
         }
+        if (words[i][0] == '[' || words[i][0] == '*') continue;
         strcat(name[j], words[i]);
         j++;
     }
@@ -352,6 +358,11 @@ bool is_keyword(char word[]) {
 */
 bool verify_name(char **name) {
     
+    if (!strcmp(name[0], "\0")) {       // se non esiste nessun nome, rileva errore nome
+        strcpy(name[0], "!valid");
+        return false;
+    }
+
     bool flag = true;   // false se almeno un nome non è valido
 
     char current_word[128];

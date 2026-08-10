@@ -47,8 +47,10 @@ InteroSenzaSegno mioPositivo;           // type valido     | name valido     | n
 
 int vettoreIntero[5];                   // type valido     | name valido     | non verrà usata
 char *puntatoreCarattere;               // type valido     | name valido     | verrà usata
-Punto *puntatoreMioPunto;               // type valido     | name valido     | non verrà usata
+Punto *** **** ** puntatoreMioPunto;    // type valido     | name valido     | non verrà usata
 int matriceIntero[3] [3];               // type valido     | name valido     | non verrà usata
+int array1[9], array2[9];               // type valido     | name valido     | non verrà usata
+int *puntatore1, ***puntatore2;         // type valido     | name valido     | non verrà usata
 float *2numeroIniz;                     // type valido     | name non valido | --
 unsignedd int arrTipoErrato [3];        // type non valido | name valido     | --
 
