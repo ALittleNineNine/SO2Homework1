@@ -203,16 +203,29 @@ int main(int argc, char *argv[]) {
                     errors = errors_management(errors, newtypes, type, name, row, flag);
                     
                     // TEST FOR IMPLEMENTATION
-                    test_array_of_array(words, type, name, row);
+                    // test_array_of_array(words, type, name, row);
 
                 } else {
+
                     start_statement_section = true;
                     count_used_variables(words, variables);
+
+                    // TEST FOR IMPLEMENTATION
+                    test_array_of_array(words, type, name, row);
+
                 }
 
             } else {
+
+                // se incontro return 0, la lettura finisce
+                if (!strcmp(words[0], "return") && !strcmp(words[1], "0")) break;
+
                 // parte verifica se la variabile è usato o no (parte dopo dichiarazione variabile)
                 count_used_variables(words, variables);
+
+                // TEST FOR IMPLEMENTATION
+                test_array_of_array(words, type, name, row);
+
             }
 
         }
@@ -226,43 +239,7 @@ int main(int argc, char *argv[]) {
     
     processing_statistics *statistics = malloc(sizeof(processing_statistics));
     get_processing_statistics(statistics, variables, errors);
-
-    printf("\n---------- STATISTICHE DI ELABORAZIONE -----------\n\n");
-
-    printf("Numero totale di variabili valide:\t\t%d\n", statistics->var_count);
-    printf("Numero totale di errori rilevati:\t\t%d\n", statistics->err_count);
-    printf("Numero di variabili non utilizzate:\t\t%d\n", statistics->var_unused_count);
-    printf("Numero di nomi di variabili non corretti:\t%d\n", statistics->wrong_var_name_count);
-    printf("Numero di tipi di dato non corretti:\t\t%d\n", statistics->wrong_var_type_count);
-
-    printf("\n--------------------------------------------------\n");
-    
-    printf("\n--- ERRORI RILEVATI ---\n\n");
-
-    error *current_err = errors;
-    while (current_err != NULL) {
-        if (current_err->wrong_type) {
-            printf("Errore tipo in riga %d\n", current_err->row);
-        }
-        if (current_err->wrong_name) {
-            printf("Errore nome in riga %d\n", current_err->row);
-        }
-        current_err = current_err->next;
-    }
-
-    printf("\n-----------------------\n");
-    
-    printf("\n-------------- VARIABILI NON UTILIZZATE --------------\n\n");
-
-    variable *current_var = variables;
-    while (current_var != NULL) {
-        if (!current_var->used) {
-            printf("%s\t\t\tdichiarata in riga %d\n", current_var->name, current_var->row);
-        }
-        current_var = current_var->next;
-    }
-
-    printf("\n------------------------------------------------------\n\n");
+    print_processing_statistics(statistics, variables, errors);
 
     // TEST FOR IMPLEMENTATION
     // test_linked_lists(variables, errors, newtypes);
@@ -314,14 +291,6 @@ int main(int argc, char *argv[]) {
 /* ____________________NineNine____________________ */
 
 }
-
-
-
-
-
-
-
-
 
 
 

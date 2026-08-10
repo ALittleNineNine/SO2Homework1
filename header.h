@@ -102,6 +102,9 @@ void reverse_linked_list(variable **variables, error **errors);
 // calcola la statistica di elaborazione
 void get_processing_statistics(processing_statistics *statistics, variable *variables, error *errors);
 
+// printa la statistica di elaborazione
+void print_processing_statistics(processing_statistics *statistics, variable *variables, error *errors);
+
 // ritorna true se in questa riga words contiene main
 bool is_main(char **words);
 
@@ -122,12 +125,6 @@ char* remove_comments(char *line);
 
 //mostra a utente compilazione corretta [from ananas]
 void input();
-
-
-
-
-
-
 
 
 

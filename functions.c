@@ -471,6 +471,50 @@ void get_processing_statistics(processing_statistics *statistics, variable *vari
 
 }
 
+// printa la statistica di elaborazione
+void print_processing_statistics(processing_statistics *statistics, variable *variables, error *errors) {
+
+    printf("\n---------- STATISTICHE DI ELABORAZIONE -----------\n\n");
+
+    printf("Numero totale di variabili valide:\t\t%d\n", statistics->var_count);
+    printf("Numero totale di errori rilevati:\t\t%d\n", statistics->err_count);
+    printf("Numero di variabili non utilizzate:\t\t%d\n", statistics->var_unused_count);
+    printf("Numero di nomi di variabili non corretti:\t%d\n", statistics->wrong_var_name_count);
+    printf("Numero di tipi di dato non corretti:\t\t%d\n", statistics->wrong_var_type_count);
+
+    printf("\n--------------------------------------------------\n");
+    
+    printf("\n--- ERRORI RILEVATI ---\n\n");
+
+    error *current_err = errors;
+    while (current_err != NULL) {
+        if (current_err->wrong_type) {
+            printf("Errore tipo in riga %d\n", current_err->row);
+        }
+        if (current_err->wrong_name) {
+            printf("Errore nome in riga %d\n", current_err->row);
+        }
+        current_err = current_err->next;
+    }
+
+    printf("\n-----------------------\n");
+    
+    printf("\n-------------- VARIABILI NON UTILIZZATE --------------\n\n");
+
+    variable *current_var = variables;
+    while (current_var != NULL) {
+        if (!current_var->used) {
+            printf("%s", current_var->name);
+            for (int i=0; i < 32 - strlen(current_var->name); i++) printf(" ");
+            printf("dichiarata in riga %d\n", current_var->row);
+        }
+        current_var = current_var->next;
+    }
+
+    printf("\n------------------------------------------------------\n\n");
+
+}
+
 // ritorna true se in questa riga words contiene main
 bool is_main(char **words) {
     for (int i=0; i < 128; i++) {
@@ -504,11 +548,37 @@ void count_used_variables(char **words, variable *variables) {
         variable *head_vars = variables;        // copy di variables per ogni iterazione (per non perdere la testa)
         while (head_vars != NULL) {
             if (!strcmp(words[i], head_vars->name)) {
+
+                // caso array
+                if (!strcmp(words[i+1], "[")) {
+                    int end_brackets_array = i+1;   // indice dopo l'ultimo "]" dopo il nome di variabile
+                    while (!strcmp(words[end_brackets_array], "[")) {
+                        while (strcmp(words[end_brackets_array], "]")) end_brackets_array++;
+                        end_brackets_array++;
+                    }
+                    if (!strcmp(words[end_brackets_array], "=")) break;
+                }
+
+                // caso puntatore
+                if (i>0 && !strcmp(words[i-1], "*")) {
+                    head_vars->used = true;
+                    break;
+                }
+
+                /*
+                    caso assegnazione/riassegnazione:
+                    - se la prossima word è "=", escludendo il caso "==", allora salta;
+                    - quando è seguito da "=", la variabile subisce una riassegnazione, non usato.
+                */
+                if (!strcmp(words[i+1], "=") && strcmp(words[i+2], "=")) break;
+                
                 head_vars->used = true;
                 break;
+
             }
             head_vars = head_vars->next;
         }
+
     }
 
 }
@@ -621,12 +691,6 @@ void input() {
 }
 
 /* ____________________ananas____________________ */
-
-
-
-
-
-
 
 
 

@@ -49,8 +49,8 @@ int vettoreIntero[5];                   // type valido     | name valido     | n
 char *puntatoreCarattere;               // type valido     | name valido     | verrà usata
 Punto *** **** ** puntatoreMioPunto;    // type valido     | name valido     | non verrà usata
 int matriceIntero[3] [3];               // type valido     | name valido     | non verrà usata
-int array1[9], array2[9];               // type valido     | name valido     | non verrà usata
-int *puntatore1, ***puntatore2;         // type valido     | name valido     | non verrà usata
+int array1[9], array2[9];               // type valido     | name valido     | non verranno usate
+int *puntatore1, ***puntatore2;         // type valido     | name valido     | non verranno usate
 float *2numeroIniz;                     // type valido     | name non valido | --
 unsignedd int arrTipoErrato [3];        // type non valido | name valido     | --
 
@@ -107,7 +107,7 @@ int main() {
     /* __________SEZIONE VARIABILI LOCALI (DICHIARAZIONE E INIZIALIZZAZIONE)__________ */
     
     int x = 5;                                  // type valido     | name valido     | verrà usata
-    int y = 10, w = 20;                         // type valido     | name valido     | verrà usata
+    int y = 10, w = 20;                         // type valido     | name valido     | verranno usate
     int *puntatoreConInizializz = &x;           // type valido     | name valido     | verrà usata
     int arrayConInizializz[3] = {1, 2, 3};      // type valido     | name valido     | non verrà usata
  
@@ -116,19 +116,19 @@ int main() {
     /* __________SEZIONE OPERAZIONI GENERALI__________ */
 
     a = 5;
-    b = 10;
+    b=10;
     risultato = a + b;
     c = 'x';
 
     positivo2 = 7;
-    positivo = positivo2 + b;
+    positivo = positivo2+b;
 
     _underscoreIniz = risultato + a;
 
     MioInteroLocale = 99;
-    mioLungoLocale = 999999;
+    mioLungoLocale =999999;
 
-    mioPositivo = positivo2;
+    mioPositivo= positivo2;
 
     /* __________SEZIONE UTILIZZO STRUCT E PUNTATORI__________ */
 
