@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
                     count_used_variables(words, variables);
 
                     // TEST FOR IMPLEMENTATION
-                    test_array_of_array(words, type, name, row);
+                    // test_array_of_array(words, type, name, row);
 
                 }
 
@@ -224,7 +224,7 @@ int main(int argc, char *argv[]) {
                 count_used_variables(words, variables);
 
                 // TEST FOR IMPLEMENTATION
-                test_array_of_array(words, type, name, row);
+                // test_array_of_array(words, type, name, row);
 
             }
 

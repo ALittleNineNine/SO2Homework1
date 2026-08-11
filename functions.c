@@ -477,7 +477,9 @@ void print_processing_statistics(processing_statistics *statistics, variable *va
     printf("\n---------- STATISTICHE DI ELABORAZIONE -----------\n\n");
 
     printf("Numero totale di variabili valide:\t\t%d\n", statistics->var_count);
-    printf("Numero totale di errori rilevati:\t\t%d\n", statistics->err_count);
+    printf("Numero totale di errori rilevati:\t\t%d\n", statistics->wrong_var_type_count + 
+                                                        statistics->wrong_var_name_count +
+                                                        statistics->var_unused_count);
     printf("Numero di variabili non utilizzate:\t\t%d\n", statistics->var_unused_count);
     printf("Numero di nomi di variabili non corretti:\t%d\n", statistics->wrong_var_name_count);
     printf("Numero di tipi di dato non corretti:\t\t%d\n", statistics->wrong_var_type_count);
