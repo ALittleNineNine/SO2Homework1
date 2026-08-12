@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
 
     char new_line[] = "\n";
     
-    char *current_row = malloc(1024);
+    char *current_row = (char *) malloc(1024);
     int row = 0;
     bool row_finished = true;               // viene assegnato false quando inizia un'istruzione a più righe, true normalmente
     int brace_level = 0;                    // variabile accessoria per verificare se la graffa è chiusa bene
@@ -114,13 +114,13 @@ int main(int argc, char *argv[]) {
     bool start_statement_section = false;   // indica se è iniziata la parte delle istruzioni (fine dichiarazione variabili)
 
     // array di array di char che contiene le righe spezzate, i tipi e i nomi delle variabili
-    char **words = malloc(128 * sizeof(char *));
-    char **type = malloc(128 * sizeof(char *));
-    char **name = malloc(128 * sizeof(char *));
+    char **words = (char **) malloc(128 * sizeof(char *));
+    char **type = (char **) malloc(128 * sizeof(char *));
+    char **name = (char **) malloc(128 * sizeof(char *));
     for (int i=0; i < 128; i++) {
-        words[i] = malloc(128 * sizeof(char));
-        type[i] = malloc(128 * sizeof(char));
-        name[i] = malloc(128 * sizeof(char));
+        words[i] = (char *) malloc(128 * sizeof(char));
+        type[i] = (char *) malloc(128 * sizeof(char));
+        name[i] = (char *) malloc(128 * sizeof(char));
     }
 
     /* ____________________Fine inizializzazione variabili____________________ */
@@ -237,7 +237,7 @@ int main(int argc, char *argv[]) {
     // variables e errors sono memorizzati nell'ordine decrescente, qui vengono reversed
     reverse_linked_list(&variables, &errors);
     
-    processing_statistics *statistics = malloc(sizeof(processing_statistics));
+    processing_statistics *statistics = (processing_statistics *) malloc(sizeof(processing_statistics));
     get_processing_statistics(statistics, variables, errors);
     print_processing_statistics(statistics, variables, errors);
 

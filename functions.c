@@ -5,7 +5,7 @@
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
 variable *add_var(variable *next_var, char type[], char name[], int row) {
 
-    variable *new_var = malloc(sizeof(variable));
+    variable *new_var = (variable *) malloc(sizeof(variable));
     strcpy(new_var->type, type);
     strcpy(new_var->name, name);
     new_var->used = false;
@@ -18,7 +18,7 @@ variable *add_var(variable *next_var, char type[], char name[], int row) {
 // crea un nuovo nodo errore e lo collega in testa alla lista errori
 error *add_error(error *next_err, int row) {
 
-    error *new_err = malloc(sizeof(error));
+    error *new_err = (error *) malloc(sizeof(error));
     new_err->wrong_type = false;
     new_err->wrong_name = false;
     new_err->row = row;
@@ -142,7 +142,7 @@ newtype *add_newtype_no_struct(newtype *newtypes, char **words) {
     int idx_type = 0;
     while (words[idx_type][0] != '\0') idx_type++;
 
-    newtype *new_type = malloc(sizeof(newtype));
+    newtype *new_type = (newtype *) malloc(sizeof(newtype));
     strcpy(new_type->type, words[idx_type - 2]);
     new_type->next = newtypes;
     return new_type;
@@ -152,7 +152,7 @@ newtype *add_newtype_no_struct(newtype *newtypes, char **words) {
 // crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef con struct)
 newtype *add_newtype_struct(newtype *newtypes, char **words, int idx) {
 
-    newtype *new_type = malloc(sizeof(newtype));
+    newtype *new_type = (newtype *) malloc(sizeof(newtype));
     strcpy(new_type->type, words[idx + 1]);
     new_type->next = newtypes;
     return new_type;
