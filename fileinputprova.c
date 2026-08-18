@@ -3,7 +3,7 @@
 // typedef  int        intero;
 
         int    main()  {
-    int    zero /* sono commento */   = 0;
+    int    zero    = 0; 
     char            zeta = 'z' ;
 
     float a, b, c = 1;
@@ -20,11 +20,11 @@
     unsigned int;
     long long while;
 
-    float double i;
+    float double i; 
 
     intero nove=9;
 
-    const static unsigned        long  long int  *** ***const *const ***** tipo3words=123   ,a,v,    b[12]   ;;;;
+    const static unsigned        long  long int  *** ***const *const ***** tipo3words=123   ,a,v,    b[12]   ;;;; */
     int a = 0 ;;;;;;;{{{{{{{{{{{}}}}}}}}}}};;
 
 
