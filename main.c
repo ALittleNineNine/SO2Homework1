@@ -253,7 +253,18 @@ int main(int argc, char *argv[]) {
         statistics->wrong_var_type_count = 0;
     }
     get_processing_statistics(statistics, variables, errors);
-    print_processing_statistics(statistics, variables, errors);
+
+    if (file_output != NULL) {
+        FILE *f_out = fopen(file_output, "w");
+        if (f_out != NULL) {
+            print_processing_statistics(f_out, statistics, variables, errors);
+            fclose(f_out);
+        }
+    } 
+
+    if (verbose || file_output == NULL) {
+        print_processing_statistics(stdout, statistics, variables, errors);
+    }
 
     // TEST FOR IMPLEMENTATION
     // test_linked_lists(variables, errors, newtypes);

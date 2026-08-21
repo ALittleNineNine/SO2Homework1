@@ -41,6 +41,22 @@ processing_statistics *statistics = (processing_statistics *) malloc(sizeof(proc
     get_processing_statistics(statistics, variables, errors);
     print_processing_statistics(statistics, variables, errors);
 
+print_processing_statistics(statistics, variables, errors); 
+modificato in:
+if (file_output != NULL) {
+        FILE *f_out = fopen(file_output, "w");
+        if (f_out != NULL) {
+            print_processing_statistics(f_out, statistics, variables, errors);
+            fclose(f_out);
+        }
+    } 
+
+    if (verbose || file_output == NULL) {
+        print_processing_statistics(stdout, statistics, variables, errors);
+    }
+motivo: in questo modo con presenza opzioni o si stampa su file, con o e v si stampa sia su stdout che su file
+
+
 
 functions
 aggiunta funzione che gestisce commenti 
@@ -289,6 +305,26 @@ statistics->var_unused_count = 0;
 statistics->wrong_var_name_count = 0;
 statistics->wrong_var_type_count = 0;
 motivo: quando si usa malloc() la memoria contiene valori scritti in precedenza e quindi contiene valori casuali, quindi si inizializza la struttura a 0 prima di usare
+
+
+void print_processing_statistics(processing_statistics *statistics, variable *variables, error *errors) {:
+
+    printf("\n---------- STATISTICHE DI ELABORAZIONE -----------\n\n");
+
+    printf("Numero totale di variabili valide:\t\t%d\n", statistics->var_count);
+    printf("Numero totale di errori rilevati:\t\t%d\n", statistics->wrong_var_type_count + 
+                                                        statistics->wrong_var_name_count +
+                                                        statistics->var_unused_count);
+    printf("Numero di variabili non utilizzate:\t\t%d\n", statistics->var_unused_count);
+    printf("Numero di nomi di variabili non corretti:\t%d\n", statistics->wrong_var_name_count);
+    printf("Numero di tipi di dato non corretti:\t\t%d\n", statistics->wrong_var_type_count);
+
+    printf("\n--------------------------------------------------\n");
+    
+    printf("\n--- ERRORI RILEVATI ---\n\n");
+modificato tutti i print con fprintf e di conseguenza modificato anche su header con aggiunta di FILE *out
+
+
 
 
 Risultato del fileinputprova.c:

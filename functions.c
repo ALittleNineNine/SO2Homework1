@@ -535,51 +535,51 @@ void get_processing_statistics(processing_statistics *statistics, variable *vari
 }
 
 // printa la statistica di elaborazione
-void print_processing_statistics(processing_statistics *statistics, variable *variables, error *errors) {
+void print_processing_statistics(FILE *out, processing_statistics *statistics, variable *variables, error *errors) {
 
-    printf("\n---------- STATISTICHE DI ELABORAZIONE -----------\n\n");
+    fprintf(out, "\n---------- STATISTICHE DI ELABORAZIONE -----------\n\n");
 
-    printf("Numero totale di variabili valide:\t\t%d\n", statistics->var_count);
-    printf("Numero totale di errori rilevati:\t\t%d\n", statistics->wrong_var_type_count + 
+    fprintf(out, "Numero totale di variabili valide:\t\t%d\n", statistics->var_count);
+    fprintf(out, "Numero totale di errori rilevati:\t\t%d\n", statistics->wrong_var_type_count + 
                                                         statistics->wrong_var_name_count +
                                                         statistics->var_unused_count);
-    printf("Numero di variabili non utilizzate:\t\t%d\n", statistics->var_unused_count);
-    printf("Numero di nomi di variabili non corretti:\t%d\n", statistics->wrong_var_name_count);
-    printf("Numero di tipi di dato non corretti:\t\t%d\n", statistics->wrong_var_type_count);
+    fprintf(out, "Numero di variabili non utilizzate:\t\t%d\n", statistics->var_unused_count);
+    fprintf(out, "Numero di nomi di variabili non corretti:\t%d\n", statistics->wrong_var_name_count);
+    fprintf(out, "Numero di tipi di dato non corretti:\t\t%d\n", statistics->wrong_var_type_count);
 
-    printf("\n--------------------------------------------------\n");
+    fprintf(out, "\n--------------------------------------------------\n");
     
-    printf("\n--- ERRORI RILEVATI ---\n\n");
+    fprintf(out, "\n--- ERRORI RILEVATI ---\n\n");
 
     error *current_err = errors;
     while (current_err != NULL) {
         if (current_err->wrong_type) {
-            printf("Errore tipo in riga %d\n", current_err->row);
+            fprintf(out, "Errore tipo in riga %d\n", current_err->row);
         }
         if (current_err->wrong_name) {
-            printf("Errore nome in riga %d\n", current_err->row);
+            fprintf(out, "Errore nome in riga %d\n", current_err->row);
         }
         current_err = current_err->next;
     }
 
-    printf("\n-----------------------\n");
+    fprintf(out, "\n-----------------------\n");
     
-    printf("\n-------------- VARIABILI NON UTILIZZATE --------------\n\n");
+    fprintf(out, "\n-------------- VARIABILI NON UTILIZZATE --------------\n\n");
 
     variable *current_var = variables;
     while (current_var != NULL) {
         if (!current_var->used) {
-            printf("%s", current_var->name);
+            fprintf(out, "%s", current_var->name);
             int padding = 32 - (int)strlen(current_var->name);
             if (padding > 0) {
                 for (int i = 0; i < padding; i++) printf(" ");
             }
-            printf("dichiarata in riga %d\n", current_var->row);
+            fprintf(out, "dichiarata in riga %d\n", current_var->row);
         }
         current_var = current_var->next;
     }
 
-    printf("\n------------------------------------------------------\n\n");
+    fprintf(out, "\n------------------------------------------------------\n\n");
 
 }
 
