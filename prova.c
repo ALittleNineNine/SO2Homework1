@@ -1,371 +1,306 @@
-#include "header.h"
+main:
+aggiunta gestione delle opzioni 
 
-int main(int argc, char *argv[]) {
+rimossa:
+char new_line[] = "\n";
 
-    // inizio ananas
-
-    char *file_input = NULL;
-    char *file_output = NULL;
-    int verbose = 0; //modalità verbose
-
-    for (int i = 1; i < argc; i++) {
-        // opzione input
-        if (strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--in") == 0) {
-            if (i + 1 < argc) {
-                file_input = argv[++i]; //prima incremento e poi viene dato l'argomento 
-            } else {
-                printf("Errore: %s necessario un argomento\n", argv[i]);
-                input();
-                return 1;
-            }
-        }
-        // opzione output
-        else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--out") == 0) {
-            if (i + 1 < argc) {
-                file_output = argv[++i];
-            } else {
-                printf("Errore: %s necessario un argomento\n", argv[i]);
-                input();
-                return 1;
-            }
-        }
-        // opzione verbose
-        else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
-            verbose = 1;
-        }
-        // opzioni raggruppate -vio -ivo -vi -ov ...
-        else if (argv[i][0] == '-' && argv[i][1] != '-' && argv[i][1] != '\0') {
-            int len = strlen(argv[i]);
-            int num_arg = 0; // conta quanti argomenti sono consumati (gestisce offset per accedere corettamente agli argomenti delle opzioni)
-
-            // veridica che ci siano abbastanza argomenti
-            int argomenti = 0;
-            for (int k = 1; k < len; k++) {
-                if (argv[i][k] == 'i' || argv[i][k] == 'o') {
-                    argomenti++;
-                }
-            }
-
-            if (argomenti > 0 && i + argomenti >= argc) {
-                printf("Errore: mancano argomenti\n");
-                input();
-                return 1;
-            }
-
-            //processare le opzioni
-            for (int k = 1; k < len; k++) {
-                char current_k = argv[i][k];
-                if (current_k == 'v') {
-                    verbose = 1;
-                }
-                else if (current_k == 'i') {
-                    file_input = argv[i + 1 + num_arg];
-                    num_arg++;
-                }
-                else if (current_k == 'o') {
-                    file_output = argv[i + 1 + num_arg];
-                    num_arg++;
-                }
-                else {
-                    printf("Errore: opzione errata '-%c'\n", current_k);
-                    input();
-                    return 1;
-                }
-            }
-            // salta argomenti già consumati
-            if (num_arg > 0) {
-                i += num_arg;
-            }
-        }
-        else {
-            printf("Errore: opzione errata %s\n", argv[i]);
-            input();
-            return 1;
-        }
-    }
-        // verifica file input
-        if (file_input == NULL) {
-            printf("Errore: manca file input\n");
-            input();
-            return 1;
-        } 
-        printf("Input: %s\n", file_input);
-        if (file_output) {
-            printf("Output: %s\n", file_output);
-        }
-        if (verbose) {
-            printf("Presente opzione verbose\n");
-        }
-        printf("\n\n\n");
-
-
-
-    // fine ananas
-
-    // inizio NineNine
-
-    FILE *fp;
-    fp = fopen(file_input, "r");
-
-    if (fp == NULL) {
+if (fp == NULL) {
         printf("Errore apertura file.\n");
         exit(1);
     }
-    
-    variable *variables = NULL;
-    error *errors = NULL;
-    char new_line[] = "\n";
-    char current_row[1024];
-    int row = 0;
-    bool start_statement_section = false;   // indica se è iniziata la parte delle istruzioni (fine dichiarazione variabili)
+modificato in:
+if (fp == NULL) {
+        printf("Errore apertura file.\n");
+        return 1;
+    }
+motivo: exit(1) termina immediatamente il programma senza pulizia, return 1 invece esce dalla funzione main() e permette di gestire la pulizia automaticamente.
 
-    while (!feof(fp)) {
-
+while (!feof(fp)) {
         row++;
-        fgets(current_row, sizeof(current_row), fp);
+        fgets(current_row, 1024, fp);
+        if (strcmp(current_row, new_line))
+modificato in:
+while (fgets(current_row, 1024, fp) != NULL) {
+        row++;
+        if (current_row[0] != '\n' && current_row[0] != '\0')
+motivo: feof() diventa true solo dopo aver tentato di leggere oltre la fine del file (può essere che elabora una riga vuota o ripete l'ultima);
+        strcmp() confronta intera stringa e può non riconosce righe con spazi/tab, righe vuote all'inizio del file
 
-        if (strcmp(current_row, new_line)) {
-            remove_comments(current_row);
-            printf("%s", current_row);
+processing_statistics *statistics = (processing_statistics *) malloc(sizeof(processing_statistics));
+    get_processing_statistics(statistics, variables, errors);
+    print_processing_statistics(statistics, variables, errors);
+modificato in:
+processing_statistics *statistics = (processing_statistics *) malloc(sizeof(processing_statistics));
+    if (statistics != NULL) {
+        statistics->var_count = 0;
+        statistics->err_count = 0;
+        statistics->var_unused_count = 0;
+        statistics->wrong_var_name_count = 0;
+        statistics->wrong_var_type_count = 0;
+    }
+    get_processing_statistics(statistics, variables, errors);
+    print_processing_statistics(statistics, variables, errors);
 
-            char words[64][64] = {0};
-            analyze_row(current_row, words);
 
-            if (!strcmp(words[0], "#")) continue;
-            if (!strcmp(words[0], "\0")) continue;
-            if (is_main(words)) continue;
+functions
+aggiunta funzione che gestisce commenti 
 
-            if (!start_statement_section ) {
 
-                if (!end_variable_declaration(words[0])) {
+void count_used_variables:
+if (!strcmp(words[i+1], "[")) { 
+modificato in:
+if (words[i+1][0] != '\0' && !strcmp(words[i+1], "[")) {
+motivo: se words[i+1] è '\0' strcmp() tenta di leggere stringa vuota e ciò causa segmentation fault
 
-                    char type[64][64] = {0};
-                    int type_length = get_type(words, type);
-                    char name[64][64] = {0};
-                    get_name(words, name, type_length);
 
-                    // aggiungere la/le variabile/i se non ci sono errori
-                    bool flag = false;  // se true, esiste almeno un nome che esisteva già
-                    char current_type[512] = {0};
-                    array_to_string(type, current_type);
+void analyze_row:
+for (int i=0; row[i] != '\0'; i++) { 
+modificato in:
+for (int i=0; row[i] != '\0' && flag < 128; i++) {
+motivo: se flag raggiunge 128 il ciclo continua causando scrittura fuori dai limiti dell'array words e quindi causa buffer overflow
 
-                    char current_name[64] = {0};
-
-                    for (int i=0; i < 64; i++) {
-                        strcpy(current_name, name[i]);
-                        if (!strcmp(current_name, "\0")) break;
-                        if (!strcmp(current_name, "!valid")) continue;
-
-                        if (existing_var(variables, current_name)) {
-                            flag = true;
-                            continue;
-                        } else if (verify_type(type) && verify_name(name)) {
-                            variable *current_var = add_var(variables, current_type, current_name, row);
-                            variables = current_var;
-                        }
-                    }
-
-                    // aggiungere l'errore se esiste
-                    if (!verify_type(type) || !verify_name(name) || flag == true) {
-                        error *current_err = add_error(errors, row);
-                        if (!verify_type(type)) current_err->wrong_type = true;
-                        if (!verify_name(name) || flag == true) current_err->wrong_name = true;
-                        errors = current_err;
-                    }
-
-                    // inizio prova
-                    
-                    printf("\nParole riga %d: ", row);
-                    for(int i=0; i < 64; i++) {
-                        if (!strcmp(words[i], "\0")) break;
-                        printf("%s ", words[i]);
-                    }
-                    printf("\nTipo riga %d: ", row);
-                    for(int i=0; i < 64; i++) {
-                        if (!strcmp(type[i], "\0")) break;
-                        printf("%s ", type[i]);
-                    }
-                    printf("\nNomi riga %d: ", row);
-                    for(int i=0; i < 64; i++) {
-                        if (!strcmp(name[i], "\0")) break;
-                        printf("%s ", name[i]);
-                    }
-                    printf("\n");
-                    
-                    // fine prova
-
-                } else start_statement_section = true;
-
+if (current_char == '"') in_string = !in_string;    // gestione alternata quando si incontra "
+        if (in_string) {
+            words[flag][idx_char] = current_char;
+            idx_char++;
+            continue;
+        }
+modificato in:
+if (current_char == '"') in_string = !in_string;    // gestione alternata quando si incontra "
+        if (in_string) {
+            if (idx_char < 127) {
+                words[flag][idx_char] = current_char;
+                idx_char++;
             } else {
-
-                // parte verifica se la variabile è usato o no (parte dopo dichiarazione variabile) [da implementare]
-
+                words[flag][127] = '\0';
+                flag++;
+                idx_char = 0;
+                if (flag >= 128) break;
             }
-
+            continue;
         }
+motivo: se la stringa è più lunga di 127 caratteri, idx_char supera 127 causando errori -> scrittura fuori dai limiti dell'array 
 
-    }
-
-    fclose(fp);
-    
-    int *var_err_count = calloc(2, sizeof(int));    // [var_count, err_count]
-    linked_list_count(var_err_count, variables, errors);
-
-    printf("\n--- STATISTICHE DI ELABORAZIONE ---\n\n");
-    printf("Numero totale di variabili valide: %d\n", var_err_count[0]);
-    printf("Numero totale di errori rilevati: %d\n", var_err_count[1]);
-
-
-
-    // inizio parte prova
-
-    printf("\n--------- VARIABLES ---------\n\n");
-    variable *current_var = variables;
-    while (current_var != NULL) {
-        printf("Tipo di riga %d: %s\n", current_var->row, current_var->type);
-        printf("Nome di riga %d: %s\n", current_var->row, current_var->name);
-        printf("\n");
-        current_var = current_var->next;
-    }
-
-    printf("\n--------- ERRORS ---------\n\n");
-    error *current_err = errors;
-    while (current_err != NULL) {
-        printf("Errore tipo in riga %d: %d\n", current_err->row, current_err->wrong_type);
-        printf("Errore nome in riga %d: %d\n", current_err->row, current_err->wrong_name);
-        printf("\n");
-        current_err = current_err->next;
-    }
-    
-    // fine parte prova
-
-    // pulizia memoria variables
-    variable *next_var;
-    while (variables != NULL) {
-        next_var = variables->next;
-        free(variables);
-        variables = next_var;
-    }
-
-    // pulizia memoria errors
-    error *next_err;
-    while (errors != NULL) {
-        next_err = errors->next;
-        free(errors);
-        errors = next_err;
-    }
-
-    // pulizia memoria var_err_count
-    free(var_err_count);
-
-    return 0;
-
-    // fine NineNine
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-// [from ananas]
-// mostra a utente compilazione corretta [from ananas]
-void input() {
-    printf("myPrecompiler -i <file input> [-o <file output>] [-v]\n");
-    printf("L'ordine degli argomenti è definito dall'ordine delle opzioni\n");
-}
-
-// funzione per rimuovere commenti 
-
-static int block_comment = 0; // indica se siamo all'interno di un commento
-
-char* remove_comments(char *line) {
-    if (line == NULL) {
-        return NULL;
-    }
-
-    char buffer[4096]; // buffer per copiare riga
-
-    // cerca la chiusura del commento /* 
-    if (block_comment) {
-        for (int i = 0; line[i] != '\0'; i++) {
-            if (line[i] == '*' && line[i + 1] == '/') {
-                strcpy(buffer, line + i + 2); // salva tutto dopo */ 
-                strcpy(line, buffer); // copia all0inizio della riga
-                block_comment = 0; // commento chiuso
-                return remove_comments(line); // ricontrolla la riga per altri commenti (ricorsione)
+if (current_char == '\'') in_char = !in_char;       // gestione alternata quando si incontra '
+        if (in_char) {
+            words[flag][idx_char] = current_char;
+            idx_char++;
+            continue;
+        }
+modificato in:
+if (current_char == '\'') in_char = !in_char;       // gestione alternata quando si incontra '
+        if (in_char) {
+            if (idx_char < 127) {
+                words[flag][idx_char] = current_char;
+                idx_char++;
+            } else {
+                words[flag][127] = '\0';
+                flag++;
+                idx_char = 0;
+                if (flag >= 128) break;
             }
+            continue;
         }
-        // se tutta la riga è un commento viene svuotata 
-        line[0] = '\0';
-        return line;
-    }
+motivo: stesso motivo sopra
 
-    // commento singola riga
-    for (int i = 0; line[i] != '\0'; i++) {
-        if (line[i] == '/' && line[i + 1] == '/') {
-            line[i] = '\0'; // tronca la riga al commento
-            break;
-        }
-    }
-
-    // commenti nella stessa riga
-    for (int i = 0; line[i] != '\0'; i++) {
-        if (line[i] == '/' && line[i + 1] == '*') {
-            int start = i; // posizione di inizio commento
-            // cerca la fine del commento 
-            for (int j = i + 2; line[j] != '\0'; j++) {
-                // caso in cui commento chiuso nella stessa riga
-                if (line[j] == '*' && line[j + 1] == '/') {
-                    strcpy(buffer, line + j + 2); // salva dopo la chiusura
-                    strcpy(line + start, buffer); // copia sopra il commento
-                    i = start - 1; // reset per ricontrollare da questa posizione
+for (int j=0; j<128; j++) {
+                if (words[j][0] == '[') in_brace = true;
+            }
+modificato in:
+for (int j=0; j<flag; j++) {
+                if (words[j][0] == '[') {
+                    in_brace = true;
                     break;
                 }
-                // caso in cui commento non chiuso nella stessa riga
-                if (line[j + 1] == '\0') {
-                    line[start] = '\0'; // tronca la riga all'inizio del commento
-                    block_comment = 1; // segnala commento che continua
-                    return line;
+            }
+motivo: controlla solo le parole effettivamente presenti (flag), usa break per uscire appena trova [ e non controlla parole vuote non inizializzate
+
+if (in_brace) {
+            words[flag][idx_char] = current_char;
+            if (current_char == '}') {
+                words[flag][idx_char] = current_char;
+                in_brace = false;
+                words[flag][idx_char+1] = '\0';
+                flag++;
+                idx_char = 0;
+            } else {
+                idx_char++;
+            }
+            continue;
+        }
+modificato in:
+if (in_brace) {
+            if (idx_char < 127) {
+                words[flag][idx_char] = current_char;
+                idx_char++;
+            }
+            if (current_char == '}') {
+                in_brace = false;
+                if (idx_char < 127) {
+                    words[flag][idx_char] = '\0';
+                } else {
+                    words[flag][127] = '\0';
+                }
+                flag++;
+                idx_char = 0;
+            } else {
+                if (idx_char >= 127) {
+                    words[flag][127] = '\0';
+                    flag++;
+                    idx_char = 0;
+                    if (flag >= 128) break;
                 }
             }
+            continue;
         }
-    }
+motivo: senza controllo idx_char scrive oltre il limite -> buffer overflow, senza controllo idx_char+1 potrebbe diventare 128
 
-    // commenti */ senza /*
-    for (int i = 0; line[i] != '\0'; i++) {
-        if (line[i] == '*' && line[i + 1] == '/') {
-            printf("Error: commento non aperto\n");
-            strcpy(buffer, line + i + 2); // salva tutto dopo */
-            strcpy(line + i, buffer);
-            if (i > 0) {
-                i--; // decrementa per ricontrollare la stessa posizione */
+if (in_bracket) {
+            words[flag][idx_char] = current_char;
+            if (current_char == ']') {
+                in_bracket = false;
+                words[flag][idx_char+1] = '\0';
+                flag++;
+                idx_char = 0;
+            } else {
+                idx_char++;
             }
+            continue;
         }
-    }
-    return line;
-}
+modificato in:
+if (in_bracket) {
+            if (idx_char < 127) {
+                words[flag][idx_char] = current_char;
+                idx_char++;
+            }
+            if (current_char == ']') {
+                in_bracket = false;
+                if (idx_char < 127) {
+                    words[flag][idx_char] = '\0';
+                } else {
+                    words[flag][127] = '\0';
+                }
+                flag++;
+                idx_char = 0;
+            } else {
+                if (idx_char >= 127) {
+                    words[flag][127] = '\0';
+                    flag++;
+                    idx_char = 0;
+                    if (flag >= 128) break;
+                }
+            }
+            continue;
+        }
+motivo: stesso motivo sopra
 
-// funzione per elaborare un intero file riga per riga
-void comment_file(FILE *file) {
-    char line[4096];
-    while (fgets(line, sizeof(line), file)) {
-        remove_comments(line);
-        if (line[0] != '\0') {
-            printf("%s", line);
-        } else {
-            printf("\n");
+words[flag][idx_char] = current_char;
+            idx_char++;
+modificato in:
+if (idx_char < 127) {
+                words[flag][idx_char] = current_char;
+                idx_char++;
+            } else {
+                words[flag][127] = '\0';
+                flag++;
+                idx_char = 0;
+                if (flag >= 128) break;
+                if (idx_char < 127) {
+                    words[flag][idx_char] = current_char;
+                    idx_char++;
+                }
+            }
+motivo: senza controllo -> potrebbe causare buffer overflow
+
+
+newtype *add_newtype_struct:
+aggiunta:
+if (words[idx + 1][0] == '\0') {
+        return newtypes;
+    }
+
+if (new_type == NULL) {
+        return newtypes;
+    }
+motivo: se words[idx+1] vuoto strcpy() copierebbe una stringa vuota e malloc() potrebbe restituire NULL
+
+
+variable *variables_management:
+aggiunta di:
+if (current_type[0] == '\0') return variables;
+motivo: se tipo vuoto salta (se non viene aggiunta può essere che ad es. a = 5 viene considerate valida, con questa aggiunta non viene considerata né valida né errata)
+
+
+void print_processing_statics:
+if (!current_var->used) {
+            printf("%s", current_var->name);
+            for (int i=0; i < 32 - strlen(current_var->name); i++) printf(" ");
+            printf("dichiarata in riga %d\n", current_var->row);
         }
+modificato in:
+if (!current_var->used) {
+            printf("%s", current_var->name);
+            int padding = 32 - (int)strlen(current_var->name);
+            if (padding > 0) {
+                for (int i = 0; i < padding; i++) printf(" ")
+            }
+            printf("dichiarata in riga %d\n", current_var->row);
+        }
+motivo: se strlen(current_var->name) > 32, 32 + strlen() diventa negativa -> loop infinito
+
+
+void count_used_variables:
+aggiunta:
+if (words[i+1][0] == '\0') continue;
+motivo: se word[i+1] non esiste salta iterazione
+
+while (!strcmp(words[end_brackets_array], "[")) {
+modificato in:
+while (words[end_brackets_array][0] != '\0' && !strcmp(words[end_brackets_array], "[")) {
+motivo: se words[end_brackets_array] non esiste, non esegue loop
+    
+while (strcmp(words[end_brackets_array], "]")) end_brackets_array++;
+                        end_brackets_array++;
+modificato in:
+while (words[end_brackets_array][0] != '\0' && strcmp(words[end_brackets_array], "]")) {
+                            end_brackets_array++;
+                            if (words[end_brackets_array][0] == '\0') break;
+                        }
+aggiunta di:
+if (words[end_brackets_array][0] == '\0') break;
+                        end_brackets_array++;
+
+if (!strcmp(words[end_brackets_array], "=")) break;
+modificato in:
+if (words[end_brackets_array][0] != '\0' && !strcmp(words[end_brackets_array], "=")) break;
+
+if (!strcmp(words[i+1], "=") && strcmp(words[i+2], "=")) break;
+modificato in:
+if (words[i+1][0] != '\0' && !strcmp(words[i+1], "=") && words[i+2][0] != '\0' && strcmp(words[i+2], "=")) {
+                    break;
+                }
+motivo: se words[i+2] non esiste non si fa strcmp()
+
+void get_processing_statistics:
+aggiunta di:
+statistics->var_count = 0;
+statistics->err_count = 0;
+statistics->var_unused_count = 0;
+statistics->wrong_var_name_count = 0;
+statistics->wrong_var_type_count = 0;
+motivo: quando si usa malloc() la memoria contiene valori scritti in precedenza e quindi contiene valori casuali, quindi si inizializza la struttura a 0 prima di usare
+
+
+Risultato del fileinputprova.c:
+Numero totale di variabili valide:		42 (type + name validi)
+Numero totale di errori rilevati:		46 (type + name non validi + var non usate)
+Numero di variabili non utilizzate:		26 
+Numero di nomi di variabili non corretti:	12
+Numero di tipi di dato non corretti:    8
+
+Codice per osservare come analyze_row() ha splittato il testo dopo rimozione commenti (da inserire in main dopo analyze_row):
+printf("Testo %d: ", row);
+    for (int i = 0; words[i][0] != '\0' && i < 10; i++) {
+        printf("%s ", words[i]);
     }
-    if (block_comment) {
-        printf("Errore: commento non chiuso alla fine del file\n");
-    }
-}
+    printf("\n\n");
