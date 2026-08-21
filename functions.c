@@ -658,6 +658,49 @@ void count_used_variables(char **words, variable *variables) {
 
 }
 
+// pulisce tutta la memoria allocata precedentemente
+void free_all(variable *variables, error *errors, newtype *newtypes, char **words, char **type, char **name, char *current_row, processing_statistics *statistics) {
+
+    // pulizia memoria variables
+    variable *next_var;
+    while (variables != NULL) {
+        next_var = variables->next;
+        free(variables);
+        variables = next_var;
+    }
+
+    // pulizia memoria errors
+    error *next_err;
+    while (errors != NULL) {
+        next_err = errors->next;
+        free(errors);
+        errors = next_err;
+    }
+
+    // pulizia memoria newtypes
+    newtype *next_newtype;
+    while (newtypes != NULL) {
+        next_newtype = newtypes->next;
+        free(newtypes);
+        newtypes = next_newtype;
+    }
+
+    // pulizie array di array words, type e name
+    for (int i=0; i < 128; i++) {
+        free(words[i]);
+        free(type[i]);
+        free(name[i]);
+    }
+    free(words);
+    free(type);
+    free(name);
+
+    // pulizie memoria variabili
+    free(current_row);
+    free(statistics);
+
+}
+
 // TEST FOR IMPLEMENTATION
 void test_array_of_array(char **words, char **type, char **name, int row) {
 

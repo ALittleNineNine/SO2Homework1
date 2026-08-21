@@ -114,6 +114,9 @@ bool end_variable_declaration(char word[], variable *variables);
 // estrae le variabili usate e aggiorna nella lista concatenata variable->used = true
 void count_used_variables(char **words, variable *variables);
 
+// pulisce tutta la memoria allocata precedentemente
+void free_all(variable *variables, error *errors, newtype *newtypes, char **words, char **type, char **name, char *current_row, processing_statistics *statistics);
+
 // TEST FOR IMPLEMENTATION
 void test_array_of_array(char **words, char **type, char **name, int row);
 

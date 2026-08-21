@@ -129,6 +129,9 @@ int main(int argc, char *argv[]) {
         name[i] = (char *) malloc(128 * sizeof(char));
     }
 
+    // struct per memorizzare la statistica
+    processing_statistics *statistics = (processing_statistics *) malloc(sizeof(processing_statistics));
+
     /* ____________________Fine inizializzazione variabili____________________ */
 
     while (fgets(current_row, 1024, fp) != NULL) {
@@ -243,7 +246,6 @@ int main(int argc, char *argv[]) {
     // variables e errors sono memorizzati nell'ordine decrescente, qui vengono reversed
     reverse_linked_list(&variables, &errors);
     
-    processing_statistics *statistics = (processing_statistics *) malloc(sizeof(processing_statistics));
     if (statistics != NULL) {
         statistics->var_count = 0;
         statistics->err_count = 0;
@@ -268,47 +270,8 @@ int main(int argc, char *argv[]) {
     // TEST FOR IMPLEMENTATION
     // test_linked_lists(variables, errors, newtypes);
 
-    /* ____________________Inizio pulizia memoria____________________ */
-
-    // pulizia memoria variables
-    variable *next_var;
-    while (variables != NULL) {
-        next_var = variables->next;
-        free(variables);
-        variables = next_var;
-    }
-
-    // pulizia memoria errors
-    error *next_err;
-    while (errors != NULL) {
-        next_err = errors->next;
-        free(errors);
-        errors = next_err;
-    }
-
-    // pulizia memoria newtypes
-    newtype *next_newtype;
-    while (newtypes != NULL) {
-        next_newtype = newtypes->next;
-        free(newtypes);
-        newtypes = next_newtype;
-    }
-
-    // pulizie array di array words, type e name
-    for (int i=0; i < 128; i++) {
-        free(words[i]);
-        free(type[i]);
-        free(name[i]);
-    }
-    free(words);
-    free(type);
-    free(name);
-
-    // pulizie memoria variabili
-    free(current_row);
-    free(statistics);
-
-    /* ____________________Fine pulizia memoria____________________ */
+    // pulizia memoria allocata
+    free_all(variables, errors, newtypes, words, type, name, current_row, statistics);
 
     return 0;
 
