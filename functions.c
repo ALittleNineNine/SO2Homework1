@@ -572,7 +572,7 @@ void print_processing_statistics(FILE *out, processing_statistics *statistics, v
             fprintf(out, "%s", current_var->name);
             int padding = 32 - (int)strlen(current_var->name);
             if (padding > 0) {
-                for (int i = 0; i < padding; i++) printf(" ");
+                for (int i = 0; i < padding; i++) fprintf(out, " ");
             }
             fprintf(out, "dichiarata in riga %d\n", current_var->row);
         }
