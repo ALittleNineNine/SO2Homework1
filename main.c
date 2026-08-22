@@ -2,14 +2,12 @@
 
 int main(int argc, char *argv[]) {
 
-/* ____________________ananas____________________ */
-
     char *file_input = NULL;
     char *file_output = NULL;
     int verbose = 0; //modalità verbose
 
     for (int i = 1; i < argc; i++) {
-        //opzione input
+        // opzione input
         if (strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--in") == 0) {
             if (i + 1 < argc) {
                 file_input = argv[++i]; //prima incremento e poi viene dato l'argomento 
@@ -19,7 +17,7 @@ int main(int argc, char *argv[]) {
                 return 1;
             }
         }
-        //opzione output
+        // opzione output
         else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--out") == 0) {
             if (i + 1 < argc) {
                 file_output = argv[++i];
@@ -29,39 +27,52 @@ int main(int argc, char *argv[]) {
                 return 1;
             }
         }
-        //opzione verbose
+        // opzione verbose
         else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
             verbose = 1;
         }
-        //opzioni raggruppate
+        // opzioni raggruppate -vio -ivo -vi -ov ...
         else if (argv[i][0] == '-' && argv[i][1] != '-' && argv[i][1] != '\0') {
             int len = strlen(argv[i]);
+            int num_arg = 0; // conta quanti argomenti sono consumati (gestisce offset per accedere corettamente agli argomenti delle opzioni)
+
+            // verifica che ci siano abbastanza argomenti
+            int argomenti = 0;
+            for (int k = 1; k < len; k++) {
+                if (argv[i][k] == 'i' || argv[i][k] == 'o') {
+                    argomenti++;
+                }
+            }
+
+            if (argomenti > 0 && i + argomenti >= argc) {
+                printf("Errore: mancano argomenti\n");
+                input();
+                return 1;
+            }
+
+            //processare le opzioni
             for (int k = 1; k < len; k++) {
                 char current_k = argv[i][k];
                 if (current_k == 'v') {
                     verbose = 1;
                 }
                 else if (current_k == 'i') {
-                    if (i + 1 < argc) {
-                        file_input = argv[++i];
-                    } else {
-                        printf("Errore: -i necessita di un argomento\n");
-                        input();
-                        return 1;
-                    }
+                    file_input = argv[i + 1 + num_arg];
+                    num_arg++;
                 }
                 else if (current_k == 'o') {
-                    if (i + 1 < argc) {
-                        file_output = argv[++i];
-                    } else {
-                        printf("Errore: -o necessita di un argomento\n");
-                        input();
-                        return 1;
-                    }
+                    file_output = argv[i + 1 + num_arg];
+                    num_arg++;
                 }
                 else {
                     printf("Errore: opzione errata '-%c'\n", current_k);
+                    input();
+                    return 1;
                 }
+            }
+            // salta argomenti già consumati
+            if (num_arg > 0) {
+                i += num_arg;
             }
         }
         else {
@@ -70,7 +81,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     }
-    //verifica file input
+        // verifica file input
         if (file_input == NULL) {
             printf("Errore: manca file input\n");
             input();
@@ -83,27 +94,21 @@ int main(int argc, char *argv[]) {
         if (verbose) {
             printf("Presente opzione verbose\n");
         }
-        printf("\n\n\n");
+        printf("\n");
 
-/* ____________________ananas____________________ */
-
-/* ____________________NineNine____________________ */
-
+        
     FILE *fp;
     fp = fopen(file_input, "r");
 
     if (fp == NULL) {
         printf("Errore apertura file.\n");
-        exit(1);
+        return 1;
     }
     
     /* ____________________Inizio inizializzazione variabili____________________ */
 
     variable *variables = NULL;
-    error *errors = NULL;
     newtype *newtypes = NULL;
-
-    char new_line[] = "\n";
     
     char *current_row = (char *) malloc(1024);
     int row = 0;
@@ -123,17 +128,19 @@ int main(int argc, char *argv[]) {
         name[i] = (char *) malloc(128 * sizeof(char));
     }
 
+    // struct per memorizzare la statistica
+    processing_statistics *statistics = (processing_statistics *) malloc(sizeof(processing_statistics));
+
     /* ____________________Fine inizializzazione variabili____________________ */
 
-    while (!feof(fp)) {
-
+    while (fgets(current_row, 1024, fp) != NULL) {
+        
         row++;
-        fgets(current_row, 1024, fp);
 
-        if (strcmp(current_row, new_line)) {
+        if (current_row[0] != '\n' && current_row[0] != '\0') {
 
-            remove_comments(current_row);
-
+            remove_comments(current_row); 
+            
             // azzerare words
             for (int i=0; i < 128; i++) {
                 words[i][0] = '\0';
@@ -180,7 +187,6 @@ int main(int argc, char *argv[]) {
             if (!strcmp(words[0], "\0")) continue;
             if (is_main(words)) continue;
 
-
             if (!start_statement_section) {
 
                 if (!end_variable_declaration(words[0], variables)) {
@@ -194,24 +200,17 @@ int main(int argc, char *argv[]) {
                     int type_length = get_type(words, type);
                     get_name(words, name, type_length);
 
-                    bool flag = false;  // se true, esiste almeno un nome che esisteva già
-
                     // aggiungere la/le variabile/i se non ci sono errori, ritorna la nuova testa della lista
-                    variables = variables_management(variables, newtypes, type, name, row, &flag);
-
-                    // aggiungere l'errore se esiste, ritorna la nuova testa della lista
-                    errors = errors_management(errors, newtypes, type, name, row, flag);
-                    
-                    // TEST FOR IMPLEMENTATION
-                    // test_array_of_array(words, type, name, row);
+                    variables = variables_management(variables, newtypes, type, name, row);
+                
+                    // test_array_of_array(words, type, name, row);    // [TEST FOR IMPLEMENTATION]
 
                 } else {
 
                     start_statement_section = true;
                     count_used_variables(words, variables);
 
-                    // TEST FOR IMPLEMENTATION
-                    // test_array_of_array(words, type, name, row);
+                    // test_array_of_array(words, type, name, row);    // [TEST FOR IMPLEMENTATION]
 
                 }
 
@@ -223,8 +222,7 @@ int main(int argc, char *argv[]) {
                 // parte verifica se la variabile è usato o no (parte dopo dichiarazione variabile)
                 count_used_variables(words, variables);
 
-                // TEST FOR IMPLEMENTATION
-                // test_array_of_array(words, type, name, row);
+                // test_array_of_array(words, type, name, row);    // [TEST FOR IMPLEMENTATION]
 
             }
 
@@ -235,60 +233,29 @@ int main(int argc, char *argv[]) {
     fclose(fp);
 
     // variables e errors sono memorizzati nell'ordine decrescente, qui vengono reversed
-    reverse_linked_list(&variables, &errors);
+    reverse_linked_list(&variables);
     
-    processing_statistics *statistics = (processing_statistics *) malloc(sizeof(processing_statistics));
-    get_processing_statistics(statistics, variables, errors);
-    print_processing_statistics(statistics, variables, errors);
+    // genera la statistica di esecuzione
+    get_processing_statistics(statistics, variables);
 
-    // TEST FOR IMPLEMENTATION
-    // test_linked_lists(variables, errors, newtypes);
-
-    /* ____________________Inizio pulizia memoria____________________ */
-
-    // pulizia memoria variables
-    variable *next_var;
-    while (variables != NULL) {
-        next_var = variables->next;
-        free(variables);
-        variables = next_var;
+    if (file_output != NULL) {
+        FILE *f_out = fopen(file_output, "w");
+        if (f_out != NULL) {
+            print_processing_statistics(f_out, statistics, variables);
+            fclose(f_out);
+        }
     }
 
-    // pulizia memoria errors
-    error *next_err;
-    while (errors != NULL) {
-        next_err = errors->next;
-        free(errors);
-        errors = next_err;
+    if (verbose || file_output == NULL) {
+        print_processing_statistics(stdout, statistics, variables);
     }
 
-    // pulizia memoria newtypes
-    newtype *next_newtype;
-    while (newtypes != NULL) {
-        next_newtype = newtypes->next;
-        free(newtypes);
-        newtypes = next_newtype;
-    }
+    // test_linked_lists(variables, newtypes);     // [TEST FOR IMPLEMENTATION]
 
-    // pulizie array di array words, type e name
-    for (int i=0; i < 128; i++) {
-        free(words[i]);
-        free(type[i]);
-        free(name[i]);
-    }
-    free(words);
-    free(type);
-    free(name);
-
-    // pulizie memoria variabili
-    free(current_row);
-    free(statistics);
-
-    /* ____________________Fine pulizia memoria____________________ */
+    // pulizia memoria allocata
+    free_all(variables, newtypes, words, type, name, current_row, statistics);
 
     return 0;
-
-/* ____________________NineNine____________________ */
 
 }
 

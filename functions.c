@@ -1,34 +1,23 @@
 #include "header.h"
 
-/* ____________________NineNine____________________ */
-
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
 variable *add_var(variable *next_var, char type[], char name[], int row) {
 
     variable *new_var = (variable *) malloc(sizeof(variable));
     strcpy(new_var->type, type);
     strcpy(new_var->name, name);
+    new_var->type_valid = true;
+    new_var->name_valid = true;
     new_var->used = false;
+    new_var->declared = false;
     new_var->row = row;
     new_var->next = next_var;
     return new_var;
 
 }
 
-// crea un nuovo nodo errore e lo collega in testa alla lista errori
-error *add_error(error *next_err, int row) {
-
-    error *new_err = (error *) malloc(sizeof(error));
-    new_err->wrong_type = false;
-    new_err->wrong_name = false;
-    new_err->row = row;
-    new_err->next = next_err;
-    return new_err;
-
-}
-
 /*
-    data una riga di codice, li spezza in al massimo in 64 parole:
+    data una riga di codice, li spezza in al massimo in parole:
     - se start_statement_section == true: le parole vengono spezzate in base anche a simboli speciali;
     - altrimenti: le parole vengono spezzate solo mediante ' ', '\t', '\n', ';', '=', '\0' e '*';
     - quando si incontrano '...' (char), "..." (array di char), [...] e {...} (dichiarazione e inizializzazione di array, verificato se lo è davvero)
@@ -45,39 +34,67 @@ void analyze_row(char *row, char **words, bool start_statement_section) {
     bool in_brace = false;      // true se siamo in una graffa (per inizializzazione array)
     bool in_bracket = false;    // true se siamo in una quadra (per definizione array)
 
-    for (int i=0; row[i] != '\0'; i++) {
+    for (int i=0; row[i] != '\0' && flag < 128; i++) {
 
         char current_char = row[i];
 
         if (current_char == '"') in_string = !in_string;    // gestione alternata quando si incontra "
         if (in_string) {
-            words[flag][idx_char] = current_char;
-            idx_char++;
+            if (idx_char < 127) {
+                words[flag][idx_char] = current_char;
+                idx_char++;
+            } else {
+                words[flag][127] = '\0';
+                flag++;
+                idx_char = 0;
+                if (flag >= 128) break;
+            }
             continue;
         }
         if (current_char == '\'') in_char = !in_char;       // gestione alternata quando si incontra '
         if (in_char) {
-            words[flag][idx_char] = current_char;
-            idx_char++;
+            if (idx_char < 127) {
+                words[flag][idx_char] = current_char;
+                idx_char++;
+            } else {
+                words[flag][127] = '\0';
+                flag++;
+                idx_char = 0;
+                if (flag >= 128) break;
+            }
             continue;
         }
 
         // gestione parentesi graffe (per inizializzazione array)
         if (!start_statement_section && current_char == '{' && flag > 0 && !strcmp(words[flag-1], "=")) {
-            for (int j=0; j<128; j++) {
-                if (words[j][0] == '[') in_brace = true;
+            for (int j=0; j<flag; j++) {
+                if (words[j][0] == '[') {
+                    in_brace = true;
+                    break;
+                }
             }
         }
         if (in_brace) {
-            words[flag][idx_char] = current_char;
-            if (current_char == '}') {
+            if (idx_char < 127) {
                 words[flag][idx_char] = current_char;
+                idx_char++;
+            }
+            if (current_char == '}') {
                 in_brace = false;
-                words[flag][idx_char+1] = '\0';
+                if (idx_char < 127) {
+                    words[flag][idx_char] = '\0';
+                } else {
+                    words[flag][127] = '\0';
+                }
                 flag++;
                 idx_char = 0;
             } else {
-                idx_char++;
+                if (idx_char >= 127) {
+                    words[flag][127] = '\0';
+                    flag++;
+                    idx_char = 0;
+                    if (flag >= 128) break;
+                }
             }
             continue;
         }
@@ -85,22 +102,45 @@ void analyze_row(char *row, char **words, bool start_statement_section) {
         // gestione parentesi quadre (per definizione array)
         if (!start_statement_section && current_char == '[') in_bracket = true;
         if (in_bracket) {
-            words[flag][idx_char] = current_char;
+            if (idx_char < 127) {
+                words[flag][idx_char] = current_char;
+                idx_char++;
+            }
             if (current_char == ']') {
                 in_bracket = false;
-                words[flag][idx_char+1] = '\0';
+                if (idx_char < 127) {
+                    words[flag][idx_char] = '\0';
+                } else {
+                    words[flag][127] = '\0';
+                }
                 flag++;
                 idx_char = 0;
             } else {
-                idx_char++;
+                if (idx_char >= 127) {
+                    words[flag][127] = '\0';
+                    flag++;
+                    idx_char = 0;
+                    if (flag >= 128) break;
+                }
             }
             continue;
         }
 
         // gestione principale
         if (current_char != ' ' && current_char != '\t' && current_char != '\n') {      // char da ignorare
-            words[flag][idx_char] = current_char;
-            idx_char++;
+            if (idx_char < 127) {
+                words[flag][idx_char] = current_char;
+                idx_char++;
+            } else {
+                words[flag][127] = '\0';
+                flag++;
+                idx_char = 0;
+                if (flag >= 128) break;
+                if (idx_char < 127) {
+                    words[flag][idx_char] = current_char;
+                    idx_char++;
+                }
+            }
 
             char next_char = row[i+1];
             if (start_statement_section) {      // gestione se andare alla prossima word
@@ -143,7 +183,7 @@ newtype *add_newtype_no_struct(newtype *newtypes, char **words) {
     while (words[idx_type][0] != '\0') idx_type++;
 
     newtype *new_type = (newtype *) malloc(sizeof(newtype));
-    strcpy(new_type->type, words[idx_type - 2]);
+    strcpy(new_type->type, words[idx_type-2]);
     new_type->next = newtypes;
     return new_type;
 
@@ -152,7 +192,13 @@ newtype *add_newtype_no_struct(newtype *newtypes, char **words) {
 // crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef con struct)
 newtype *add_newtype_struct(newtype *newtypes, char **words, int idx) {
 
+    if (words[idx + 1][0] == '\0') {
+        return newtypes;
+    }
     newtype *new_type = (newtype *) malloc(sizeof(newtype));
+    if (new_type == NULL) {
+        return newtypes;
+    }
     strcpy(new_type->type, words[idx + 1]);
     new_type->next = newtypes;
     return new_type;
@@ -211,40 +257,38 @@ void get_name(char **words, char **name, int start_idx) {
 
 }
 
-// aggiungere la/le variabile/i se non ci sono errori, ritorna la nuova testa della lista
-variable *variables_management(variable *variables, newtype *newtypes, char **type, char **name, int row, bool *flag) {
+// aggiungere la/le variabile/i con eventuali errori, ritorna la nuova testa della lista
+variable *variables_management(variable *variables, newtype *newtypes, char **type, char **name, int row) {
 
     char current_type[512] = {0};
     array_to_string(type, current_type);
-    char current_name[128] = {0};
 
+    if (current_type[0] == '\0') return variables;
+
+    bool type_validity = verify_type(type, newtypes);
+
+    char current_name[128] = {0};
     for (int i=0; i < 128; i++) {
         strcpy(current_name, name[i]);
-        if (!strcmp(current_name, "\0")) break;
-        if (!strcmp(current_name, "!valid")) continue;
 
-        if (existing_var(variables, current_name)) {
-            *flag = true;
-            continue;
-        } else if (verify_type(type, newtypes) && verify_name(name)) {
+        if (i == 0 && !strcmp(current_name, "\0")) {
             variables = add_var(variables, current_type, current_name, row);
+            if (!type_validity) variables->type_valid = false;
+            variables->name_valid = false;
+            break;
         }
+
+        if (!strcmp(current_name, "\0")) break;
+
+        bool name_existence = existing_var(variables, current_name);
+
+        variables = add_var(variables, current_type, current_name, row);
+        if (!type_validity) variables->type_valid = false;
+        if (!verify_name(current_name)) variables->name_valid = false;
+        if (name_existence) variables->declared = true;
     }
 
     return variables;
-
-}
-
-// aggiungere l'errore se esiste, ritorna la nuova testa della lista
-error *errors_management(error *errors, newtype *newtypes, char **type, char **name, int row, bool flag) {
-
-    if (!verify_type(type, newtypes) || !verify_name(name) || flag == true) {
-        error *current_err = add_error(errors, row);
-        if (!verify_type(type, newtypes)) current_err->wrong_type = true;
-        if (!verify_name(name) || flag == true) current_err->wrong_name = true;
-        errors = current_err;
-    }
-    return errors;
 
 }
 
@@ -351,49 +395,28 @@ bool is_keyword(char word[]) {
 
 }
 
-/* 
-    dato un array name, restituisce true se sono tutti nomi validi
-    il nome eventualmente non valido viene sostituito inplacemente con "!valid"
-    quindi se la funzione restituisce false, non significa automaticamente che non ci siano nomi validi
-*/
-bool verify_name(char **name) {
-    
-    if (!strcmp(name[0], "\0")) {       // se non esiste nessun nome, rileva errore nome
-        strcpy(name[0], "!valid");
+// dato una stringa che rappresenta un nome, se il nome non è valido ritorna false
+bool verify_name(char *name) {
+
+    if (is_keyword(name)) {
         return false;
     }
 
-    bool flag = true;   // false se almeno un nome non è valido
-
-    char current_word[128];
-    // itera su tutte le parole in array name, se è una keyword, restituisce false
-    for (int i=0; i < 128; i++) {
-        strcpy(current_word, name[i]);
-        if (!strcmp(current_word, "\0")) break;
-        if (is_keyword(current_word)) {
-            strcpy(name[i], "!valid");  // la stringa "!valid" indica nome non valido, da ignorare quando si memorizzerà
-            flag = false;
+    char current_char;
+    // itera su tutti i char di ogni nome e restituisce false se il nome non è valido
+    for (int j=0; j < 128; j++) {
+        current_char = name[j];
+        if (current_char == '\0') break;
+        if (j == 0 && current_char >= 48 && current_char <= 57) {
+            return false;
         }
-
-        char current_char;
-        // itera su tutti i char di ogni nome e restituisce false se il nome non è valido
-        for (int j=0; j < 128; j++) {
-            current_char = current_word[j];
-            if (current_char == '\0') break;
-            if (j == 0 && current_char >= 48 && current_char <= 57) {
-                strcpy(name[i], "!valid");
-                flag = false;
-            }
-            if (current_char < 48 || (current_char > 57 && current_char < 65) || (current_char > 90 && current_char < 95) ||
-                (current_char > 95 && current_char < 97) || current_char > 122) {
-                strcpy(name[i], "!valid");
-                flag = false;
-               }
+        if (current_char < 48 || (current_char > 57 && current_char < 65) || (current_char > 90 && current_char < 95) ||
+            (current_char > 95 && current_char < 97) || current_char > 122) {
+            return false;
         }
-
     }
 
-    return flag;
+    return true;
 
 }
 
@@ -421,7 +444,7 @@ void array_to_string(char **array, char string[]) {
 }
 
 // date le liste concatenate variables e errors, li mette in ordine invertito
-void reverse_linked_list(variable **variables, error **errors) {
+void reverse_linked_list(variable **variables) {
 
     variable *prev_var = NULL;
     variable *current_var = *variables;
@@ -436,84 +459,84 @@ void reverse_linked_list(variable **variables, error **errors) {
 
     *variables = prev_var;
 
-    error *prev_err = NULL;
-    error *current_err = *errors;
-    error *next_err = NULL;
-
-    while (current_err != NULL) {
-        next_err = current_err->next;
-        current_err->next = prev_err;
-        prev_err = current_err;
-        current_err = next_err;
-    }
-
-    *errors = prev_err;
-
 }
 
 // calcola la statistica di elaborazione
-void get_processing_statistics(processing_statistics *statistics, variable *variables, error *errors) {
+void get_processing_statistics(processing_statistics *statistics, variable *variables) {
+
+    statistics->var_count = 0;
+    statistics->err_count = 0;
+    statistics->var_unused_count = 0;
+    statistics->wrong_var_name_count = 0;
+    statistics->wrong_var_type_count = 0;
 
     variable *current_var = variables;
     while (current_var != NULL) {
         statistics->var_count++;
-        if (!current_var->used) statistics->var_unused_count++;
+        if (!current_var->used && current_var->type_valid && current_var->name_valid && !current_var->declared) statistics->var_unused_count++;
+        if (!current_var->name_valid || current_var->declared) statistics->wrong_var_name_count++;
+        if (!current_var->type_valid) statistics->wrong_var_type_count++;
         current_var = current_var->next;
-    }
-
-    error *current_err = errors;
-    while (current_err != NULL) {
-        statistics->err_count++;
-        if (current_err->wrong_type) statistics->wrong_var_type_count++;
-        if (current_err->wrong_name) statistics->wrong_var_name_count++;
-        current_err = current_err->next;
     }
 
 }
 
 // printa la statistica di elaborazione
-void print_processing_statistics(processing_statistics *statistics, variable *variables, error *errors) {
+void print_processing_statistics(FILE *out, processing_statistics *statistics, variable *variables) {
 
-    printf("\n---------- STATISTICHE DI ELABORAZIONE -----------\n\n");
+    fprintf(out, "\n---------- STATISTICHE DI ELABORAZIONE -----------\n\n");
 
-    printf("Numero totale di variabili valide:\t\t%d\n", statistics->var_count);
-    printf("Numero totale di errori rilevati:\t\t%d\n", statistics->wrong_var_type_count + 
-                                                        statistics->wrong_var_name_count +
-                                                        statistics->var_unused_count);
-    printf("Numero di variabili non utilizzate:\t\t%d\n", statistics->var_unused_count);
-    printf("Numero di nomi di variabili non corretti:\t%d\n", statistics->wrong_var_name_count);
-    printf("Numero di tipi di dato non corretti:\t\t%d\n", statistics->wrong_var_type_count);
+    fprintf(out, "Numero totale di variabili controllate:         %d\n", statistics->var_count);
+    fprintf(out, "Numero totale di errori rilevati:               %d\n", statistics->wrong_var_type_count + 
+                                                                         statistics->wrong_var_name_count +
+                                                                         statistics->var_unused_count);
+    fprintf(out, "Numero di variabili non utilizzate:             %d\n", statistics->var_unused_count);
+    fprintf(out, "Numero di nomi di variabili non corretti:       %d\n", statistics->wrong_var_name_count);
+    fprintf(out, "Numero di tipi di dato non corretti:            %d\n", statistics->wrong_var_type_count);
 
-    printf("\n--------------------------------------------------\n");
+    fprintf(out, "\n--------------------------------------------------\n");
     
-    printf("\n--- ERRORI RILEVATI ---\n\n");
-
-    error *current_err = errors;
-    while (current_err != NULL) {
-        if (current_err->wrong_type) {
-            printf("Errore tipo in riga %d\n", current_err->row);
-        }
-        if (current_err->wrong_name) {
-            printf("Errore nome in riga %d\n", current_err->row);
-        }
-        current_err = current_err->next;
-    }
-
-    printf("\n-----------------------\n");
-    
-    printf("\n-------------- VARIABILI NON UTILIZZATE --------------\n\n");
+    fprintf(out, "\n------------------- ERRORI RILEVATI -------------------\n\n");
 
     variable *current_var = variables;
     while (current_var != NULL) {
-        if (!current_var->used) {
-            printf("%s", current_var->name);
-            for (int i=0; i < 32 - strlen(current_var->name); i++) printf(" ");
-            printf("dichiarata in riga %d\n", current_var->row);
+        if (!current_var->type_valid) {
+            fprintf(out, "%s", current_var->type);
+            int padding = 32 - (int)strlen(current_var->type);
+            if (padding > 0) {
+                for (int i = 0; i < padding; i++) fprintf(out, " ");
+            }
+            fprintf(out, "Errore tipo in riga %d\n", current_var->row);
+        }
+        if (!current_var->name_valid || current_var->declared) {
+            fprintf(out, "%s", current_var->name);
+            int padding = 32 - (int)strlen(current_var->name);
+            if (padding > 0) {
+                for (int i = 0; i < padding; i++) fprintf(out, " ");
+            }
+            fprintf(out, "Errore nome in riga %d\n", current_var->row);
         }
         current_var = current_var->next;
     }
 
-    printf("\n------------------------------------------------------\n\n");
+    fprintf(out, "\n-------------------------------------------------------\n");
+    
+    fprintf(out, "\n-------------- VARIABILI NON UTILIZZATE --------------\n\n");
+
+    current_var = variables;
+    while (current_var != NULL) {
+        if (!current_var->used && current_var->type_valid && current_var->name_valid && !current_var->declared) {
+            fprintf(out, "%s", current_var->name);
+            int padding = 32 - (int)strlen(current_var->name);
+            if (padding > 0) {
+                for (int i = 0; i < padding; i++) fprintf(out, " ");
+            }
+            fprintf(out, "Dichiarata in riga %d\n", current_var->row);
+        }
+        current_var = current_var->next;
+    }
+
+    fprintf(out, "\n------------------------------------------------------\n\n");
 
 }
 
@@ -549,16 +572,20 @@ void count_used_variables(char **words, variable *variables) {
 
         variable *head_vars = variables;        // copy di variables per ogni iterazione (per non perdere la testa)
         while (head_vars != NULL) {
-            if (!strcmp(words[i], head_vars->name)) {
+            if (!strcmp(words[i], head_vars->name) && head_vars->type_valid && head_vars->name_valid) {
 
                 // caso array
-                if (!strcmp(words[i+1], "[")) {
+                if (words[i+1][0] != '\0' && !strcmp(words[i+1], "[")) {
                     int end_brackets_array = i+1;   // indice dopo l'ultimo "]" dopo il nome di variabile
-                    while (!strcmp(words[end_brackets_array], "[")) {
-                        while (strcmp(words[end_brackets_array], "]")) end_brackets_array++;
+                    while (words[end_brackets_array][0] != '\0' && !strcmp(words[end_brackets_array], "[")) {
+                        while (words[end_brackets_array][0] != '\0' && strcmp(words[end_brackets_array], "]")) {
+                            end_brackets_array++;
+                            if (words[end_brackets_array][0] == '\0') break;
+                        }
+                        if (words[end_brackets_array][0] == '\0') break;
                         end_brackets_array++;
                     }
-                    if (!strcmp(words[end_brackets_array], "=")) break;
+                    if (words[end_brackets_array][0] != '\0' && !strcmp(words[end_brackets_array], "=")) break;
                 }
 
                 // caso puntatore
@@ -572,7 +599,9 @@ void count_used_variables(char **words, variable *variables) {
                     - se la prossima word è "=", escludendo il caso "==", allora salta;
                     - quando è seguito da "=", la variabile subisce una riassegnazione, non usato.
                 */
-                if (!strcmp(words[i+1], "=") && strcmp(words[i+2], "=")) break;
+                if (words[i+1][0] != '\0' && !strcmp(words[i+1], "=") && words[i+2][0] != '\0' && strcmp(words[i+2], "=")) {
+                    break;
+                }
                 
                 head_vars->used = true;
                 break;
@@ -582,6 +611,41 @@ void count_used_variables(char **words, variable *variables) {
         }
 
     }
+
+}
+
+// pulisce tutta la memoria allocata precedentemente
+void free_all(variable *variables, newtype *newtypes, char **words, char **type, char **name, char *current_row, processing_statistics *statistics) {
+
+    // pulizia memoria variables
+    variable *next_var;
+    while (variables != NULL) {
+        next_var = variables->next;
+        free(variables);
+        variables = next_var;
+    }
+
+    // pulizia memoria newtypes
+    newtype *next_newtype;
+    while (newtypes != NULL) {
+        next_newtype = newtypes->next;
+        free(newtypes);
+        newtypes = next_newtype;
+    }
+
+    // pulizie array di array words, type e name
+    for (int i=0; i < 128; i++) {
+        free(words[i]);
+        free(type[i]);
+        free(name[i]);
+    }
+    free(words);
+    free(type);
+    free(name);
+
+    // pulizie memoria variabili
+    free(current_row);
+    free(statistics);
 
 }
 
@@ -608,25 +672,19 @@ void test_array_of_array(char **words, char **type, char **name, int row) {
 }
 
 // TEST FOR IMPLEMENTATION
-void test_linked_lists(variable *variables, error *errors, newtype *newtypes) {
+void test_linked_lists(variable *variables, newtype *newtypes) {
 
     printf("\n--------- VARIABLES ---------\n\n");
     variable *current_var = variables;
     while (current_var != NULL) {
         printf("Tipo di riga %d: %s\n", current_var->row, current_var->type);
         printf("Nome di riga %d: %s\n", current_var->row, current_var->name);
-        printf("Usato? %d\n", current_var->used);
+        printf("Tipo valido? %s\n", current_var->type_valid ? "true" : "false");
+        printf("Nome valido? %s\n", current_var->name_valid ? "true" : "false");
+        printf("Usato? %s\n", current_var->used ? "true" : "false");
+        printf("Dichiarato? %s\n", current_var->declared ? "true" : "false");
         printf("\n");
         current_var = current_var->next;
-    }
-
-    printf("\n--------- ERRORS ---------\n\n");
-    error *current_err = errors;
-    while (current_err != NULL) {
-        printf("Errore tipo in riga %d: %d\n", current_err->row, current_err->wrong_type);
-        printf("Errore nome in riga %d: %d\n", current_err->row, current_err->wrong_name);
-        printf("\n");
-        current_err = current_err->next;
     }
 
     printf("\n--------- NEWTYPES ---------\n\n");
@@ -641,58 +699,81 @@ void test_linked_lists(variable *variables, error *errors, newtype *newtypes) {
 
 }
 
-/* ____________________NineNine____________________ */
-
-/* ____________________ananas____________________ */
-
-// funzione per rimuovere commenti
-char* remove_comments(char *line) {
-    if (line == NULL) {
-        return NULL;
-    }
-    //1. Gestione commento //
-    for (int i = 0; line[i] != '\0'; i++) {
-        if (line[i] == '/' && line[i + 1] == '/') {
-            line[i] = '\0';
-            break;
-        }
-    }
-    //2. Gestione commento /*
-    for (int i = 0; line[i] != '\0'; i++) {
-        if (line[i] == '/' && line[i + 1] == '*') {
-            int start = i;
-            int end = -1;
-            // cerca fine commento
-            for (int j = i + 2; line[j] != '\0'; j++) {
-                if (line[j] == '*' && line[j + 1] == '/') {
-                    end = j;
-                    break;
-                }
-            }
-            //copia resto stringa
-            if (end != -1) {
-                int k;
-                for (k = 0; line[end + 2 + k] != '\0'; k++) {
-                    line[start + k] = line[end + 2 + k];
-                }
-                line[start + k] = '\0';
-            }
-            else {
-                line[start] = '\0';
-            }
-            break;
-        }
-    }
-    return line;
-}
-
 // mostra a utente compilazione corretta
 void input() {
     printf("myPrecompiler -i <file input> [-o <file output>] [-v]\n");
     printf("L'ordine degli argomenti è definito dall'ordine delle opzioni\n");
 }
 
-/* ____________________ananas____________________ */
+// funzione per rimuovere commenti
+static int block_comment = 0; // indica se siamo all'interno di un commento
+
+char* remove_comments(char *line) {
+    if (line == NULL) {
+        return NULL;
+    }
+
+    char buffer[4096]; // buffer per copiare riga
+
+    // cerca la chiusura del commento /* 
+    if (block_comment) {
+        for (int i = 0; line[i] != '\0'; i++) {
+            if (line[i] == '*' && line[i + 1] == '/') {
+                strcpy(buffer, line + i + 2); // salva tutto dopo */ 
+                strcpy(line, buffer); // copia all0inizio della riga
+                block_comment = 0; // commento chiuso
+                return remove_comments(line); // ricontrolla la riga per altri commenti (ricorsione)
+            }
+        }
+        // se tutta la riga è un commento viene svuotata 
+        line[0] = '\0';
+        return line;
+    }
+
+    // commento singola riga
+    for (int i = 0; line[i] != '\0'; i++) {
+        if (line[i] == '/' && line[i + 1] == '/') {
+            line[i] = '\0'; // tronca la riga al commento
+            break;
+        }
+    }
+
+    // commenti nella stessa riga
+    for (int i = 0; line[i] != '\0'; i++) {
+        if (line[i] == '/' && line[i + 1] == '*') {
+            int start = i; // posizione di inizio commento
+            // cerca la fine del commento 
+            for (int j = i + 2; line[j] != '\0'; j++) {
+                // caso in cui commento chiuso nella stessa riga
+                if (line[j] == '*' && line[j + 1] == '/') {
+                    strcpy(buffer, line + j + 2); // salva dopo la chiusura
+                    strcpy(line + start, buffer); // copia sopra il commento
+                    i = start - 1; // reset per ricontrollare da questa posizione
+                    break;
+                }
+                // caso in cui commento non chiuso nella stessa riga
+                if (line[j + 1] == '\0') {
+                    line[start] = '\0'; // tronca la riga all'inizio del commento
+                    block_comment = 1; // segnala commento che continua
+                    return line;
+                }
+            }
+        }
+    }
+
+    // commenti */ senza /*
+    for (int i = 0; line[i] != '\0'; i++) {
+        if (line[i] == '*' && line[i + 1] == '/') {
+            printf("Error: commento non aperto\n");
+            strcpy(buffer, line + i + 2); // salva tutto dopo */
+            strcpy(line + i, buffer);
+            if (i > 0) {
+                i = -1; // decrementa per ricontrollare da capo
+            }
+        }
+    }
+    return line;
+} 
 
 
 

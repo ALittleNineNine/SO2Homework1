@@ -5,41 +5,33 @@
 
 // struct lista concatenata per memorizzare informazioni sulle variabili
 typedef struct variable {
-    char type[512];
-    char name[128];
-    bool used;
-    int row;
-    struct variable *next;
+    char type[512];     // tipo della variabile
+    char name[128];     // nome della variabile
+    bool type_valid;    // true se il tipo è valido
+    bool name_valid;    // true se il nome è valido
+    bool used;          // true se la variabile viene usata         [se (type_valid || name_valid) == false, non si tiene conto di questa var]
+    bool declared;      // true se la variabile è già dichiarata
+    int row;            // numero di riga dove è dichiarata
+    struct variable *next;  // puntatore al prossimo valore (lista concatenata)
 } variable;
-
-// struct lista concatenata per memorizzare informazioni sugli errori
-typedef struct error {
-    bool wrong_type;
-    bool wrong_name;
-    int row;
-    struct error *next;
-} error;
 
 // struct lista concatenata per memorizzare informazioni sui tipi creati con typedef
 typedef struct newtype {
-    char type[512];
-    struct newtype *next;
+    char type[512];         // nome del tuoi
+    struct newtype *next;   // puntatore al prossimo tipo
 } newtype;
 
 // struct per memorizzare informazioni sulle statistiche di elaborazione
 typedef struct {
-    int var_count;
-    int err_count;
-    int var_unused_count;
-    int wrong_var_name_count;
-    int wrong_var_type_count;
+    int var_count;              // numero totale di variabili valide
+    int err_count;              // numero totale di errori
+    int var_unused_count;       // variabili dichiarate ma non usate
+    int wrong_var_name_count;   // variabili con nome non valido
+    int wrong_var_type_count;   // variabili con tipo non valido
 } processing_statistics;
 
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
 variable *add_var(variable *next_var, char type[], char name[], int row);
-
-// crea un nuovo nodo errore e lo collega in testa alla lista errori
-error *add_error(error *next_err, int row);
 
 /*
     data una riga di codice, li spezza in al massimo in 64 parole:
@@ -68,11 +60,8 @@ int get_type(char **words, char **type);
 // data un array di array di char contenente una riga di dichiarazione variabile, mantiene solo la parte name
 void get_name(char **words, char **name, int start_idx);
 
-// aggiungere la/le variabile/i se non ci sono errori, ritorna la nuova testa della lista
-variable *variables_management(variable *variables, newtype *newtypes, char **type, char **name, int row, bool *flag);
-
-// aggiungere l'errore se esiste, ritorna la nuova testa della lista
-error *errors_management(error *errors, newtype *newtypes, char **type, char **name, int row, bool flag);
+// aggiungere la/le variabile/i con eventuali errori, ritorna la nuova testa della lista
+variable *variables_management(variable *variables, newtype *newtypes, char **type, char **name, int row);
 
 // data una word, restituisce true se word è un tipo base
 bool is_basic_type(char word[]);
@@ -83,12 +72,8 @@ bool verify_type(char **type, newtype *newtypes);
 // data una word, restituisce true se word è una keyword del linguaggio C
 bool is_keyword(char word[]);
 
-/* 
-    dato un array name, restituisce true se sono tutti nomi validi
-    il nome eventualmente non valido viene sostituito inplacemente con "!valid"
-    quindi se la funzione restituisce false, non significa automaticamente che non ci siano nomi validi
-*/
-bool verify_name(char **name);
+// dato una stringa che rappresenta un nome, se il nome non è valido ritorna false
+bool verify_name(char *name);
 
 // data una lista concatenata contenenti varaibili e un nome, restituisce true se il nome appartiene alla lista
 bool existing_var(variable *variables, char name[]);
@@ -97,13 +82,13 @@ bool existing_var(variable *variables, char name[]);
 void array_to_string(char **array, char string[]);
 
 // date le liste concatenate variables e errors, li mette in ordine invertito
-void reverse_linked_list(variable **variables, error **errors);
+void reverse_linked_list(variable **variables);
 
 // calcola la statistica di elaborazione
-void get_processing_statistics(processing_statistics *statistics, variable *variables, error *errors);
+void get_processing_statistics(processing_statistics *statistics, variable *variables);
 
 // printa la statistica di elaborazione
-void print_processing_statistics(processing_statistics *statistics, variable *variables, error *errors);
+void print_processing_statistics(FILE *out, processing_statistics *statistics, variable *variables);
 
 // ritorna true se in questa riga words contiene main
 bool is_main(char **words);
@@ -114,17 +99,20 @@ bool end_variable_declaration(char word[], variable *variables);
 // estrae le variabili usate e aggiorna nella lista concatenata variable->used = true
 void count_used_variables(char **words, variable *variables);
 
+// pulisce tutta la memoria allocata precedentemente
+void free_all(variable *variables, newtype *newtypes, char **words, char **type, char **name, char *current_row, processing_statistics *statistics);
+
 // TEST FOR IMPLEMENTATION
 void test_array_of_array(char **words, char **type, char **name, int row);
 
 // TEST FOR IMPLEMENTATION
-void test_linked_lists(variable *variables, error *errors, newtype *newtypes);
+void test_linked_lists(variable *variables, newtype *newtypes);
+
+// mostra a utente compilazione corretta [from ananas]
+void input();
 
 // funzione per rimuovere commenti [from ananas]
 char* remove_comments(char *line);
-
-//mostra a utente compilazione corretta [from ananas]
-void input();
 
 
 
