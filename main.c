@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
     // controllo allocazione
     if (current_row == NULL) {
         printf("Errore: allocazione malloc fallita\n");
-        fpclose(fp);
+        fclose(fp);
         return 1;
     }
 
