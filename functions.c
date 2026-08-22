@@ -535,17 +535,19 @@ void get_processing_statistics(processing_statistics *statistics, variable *vari
 }
 
 // printa la statistica di elaborazione
-void print_processing_statistics(FILE *out, processing_statistics *statistics, variable *variables, error *errors) {
+int print_processing_statistics(FILE *out, processing_statistics *statistics, variable *variables, error *errors) {
+
+    if (out == NULL) return 1;
 
     fprintf(out, "\n---------- STATISTICHE DI ELABORAZIONE -----------\n\n");
 
-    fprintf(out, "Numero totale di variabili valide:\t\t%d\n", statistics->var_count);
-    fprintf(out, "Numero totale di errori rilevati:\t\t%d\n", statistics->wrong_var_type_count + 
-                                                        statistics->wrong_var_name_count +
-                                                        statistics->var_unused_count);
-    fprintf(out, "Numero di variabili non utilizzate:\t\t%d\n", statistics->var_unused_count);
-    fprintf(out, "Numero di nomi di variabili non corretti:\t%d\n", statistics->wrong_var_name_count);
-    fprintf(out, "Numero di tipi di dato non corretti:\t\t%d\n", statistics->wrong_var_type_count);
+    fprintf(out, "Numero totale di variabili valide:              %d\n", statistics->var_count);
+    fprintf(out, "Numero totale di errori rilevati:               %d\n", statistics->wrong_var_type_count + 
+                                                                          statistics->wrong_var_name_count +
+                                                                          statistics->var_unused_count);
+    fprintf(out, "Numero di variabili non utilizzate:             %d\n", statistics->var_unused_count);
+    fprintf(out, "Numero di nomi di variabili non corretti:       %d\n", statistics->wrong_var_name_count);
+    fprintf(out, "Numero di tipi di dato non corretti:            %d\n", statistics->wrong_var_type_count);
 
     fprintf(out, "\n--------------------------------------------------\n");
     
@@ -581,6 +583,7 @@ void print_processing_statistics(FILE *out, processing_statistics *statistics, v
 
     fprintf(out, "\n------------------------------------------------------\n\n");
 
+    return 0;
 }
 
 // ritorna true se in questa riga words contiene main
@@ -655,6 +658,49 @@ void count_used_variables(char **words, variable *variables) {
         }
 
     }
+
+}
+
+// pulisce tutta la memoria allocata precedentemente
+void free_all(variable *variables, error *errors, newtype *newtypes, char **words, char **type, char **name, char *current_row, processing_statistics *statistics) {
+
+    // pulizia memoria variables
+    variable *next_var;
+    while (variables != NULL) {
+        next_var = variables->next;
+        free(variables);
+        variables = next_var;
+    }
+
+    // pulizia memoria errors
+    error *next_err;
+    while (errors != NULL) {
+        next_err = errors->next;
+        free(errors);
+        errors = next_err;
+    }
+
+    // pulizia memoria newtypes
+    newtype *next_newtype;
+    while (newtypes != NULL) {
+        next_newtype = newtypes->next;
+        free(newtypes);
+        newtypes = next_newtype;
+    }
+
+    // pulizie array di array words, type e name
+    for (int i=0; i < 128; i++) {
+        free(words[i]);
+        free(type[i]);
+        free(name[i]);
+    }
+    free(words);
+    free(type);
+    free(name);
+
+    // pulizie memoria variabili
+    free(current_row);
+    free(statistics);
 
 }
 
@@ -789,3 +835,6 @@ char* remove_comments(char *line) {
     }
     return line;
 } 
+
+
+

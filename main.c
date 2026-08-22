@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
             int len = strlen(argv[i]);
             int num_arg = 0; // conta quanti argomenti sono consumati (gestisce offset per accedere corettamente agli argomenti delle opzioni)
 
-            // veridica che ci siano abbastanza argomenti
+            // verifica che ci siano abbastanza argomenti
             int argomenti = 0;
             for (int k = 1; k < len; k++) {
                 if (argv[i][k] == 'i' || argv[i][k] == 'o') {
@@ -81,7 +81,14 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     }
-        // verifica file input
+
+        // verifica argomenti
+        if (argc < 2) {
+            printf("Errore: nessun parametro specificato\n");
+            input();
+            return 1;
+        }
+
         if (file_input == NULL) {
             printf("Errore: manca file input\n");
             input();
@@ -96,12 +103,12 @@ int main(int argc, char *argv[]) {
         }
         printf("\n");
 
-        
+    // apertura file input
     FILE *fp;
     fp = fopen(file_input, "r");
 
     if (fp == NULL) {
-        printf("Errore apertura file.\n");
+        printf("Errore apertura file\n");
         return 1;
     }
     
@@ -112,6 +119,13 @@ int main(int argc, char *argv[]) {
     newtype *newtypes = NULL;
     
     char *current_row = (char *) malloc(1024);
+    // controllo allocazione
+    if (current_row == NULL) {
+        printf("Errore: allocazione malloc fallita\n");
+        fpclose(fp);
+        return 1;
+    }
+
     int row = 0;
     bool row_finished = true;               // viene assegnato false quando inizia un'istruzione a più righe, true normalmente
     int brace_level = 0;                    // variabile accessoria per verificare se la graffa è chiusa bene
@@ -123,15 +137,60 @@ int main(int argc, char *argv[]) {
     char **words = (char **) malloc(128 * sizeof(char *));
     char **type = (char **) malloc(128 * sizeof(char *));
     char **name = (char **) malloc(128 * sizeof(char *));
+    // controllo allocazione
+    if (words == NULL || type == NULL || name == NULL) {
+        printf("Errore: allocazione malloc fallita per gli array di array di char\n");
+        free(current_row);
+        fclose(fp);
+        return 1;
+    }
+
     for (int i=0; i < 128; i++) {
         words[i] = (char *) malloc(128 * sizeof(char));
         type[i] = (char *) malloc(128 * sizeof(char));
         name[i] = (char *) malloc(128 * sizeof(char));
+        // controllo allocazione
+        if (words[i] == NULL || type[i] == NULL || name[i] == NULL) {
+            printf("Errore: allocazione malloc fallita per le parole '%d'\n", i);
+            for (int j = 0; j < i; j++) {
+                free(words[j]);
+                free(type[j]);
+                free(name[j]);
+            }
+            free(words);
+            free(type);
+            free(name);
+            free(current_row);
+            fclose(fp);
+            return 1;
+        }
+    }
+
+    // struct per memorizzare la statistica
+    processing_statistics *statistics = (processing_statistics *) malloc(sizeof(processing_statistics));
+    // controllo allocazione
+    if (statistics == NULL) {
+        printf("Errore: allocazione malloc fallita per statistiche\n");
+
+        for (int i=0; i < 128; i++) {
+        free(words[i]);
+        free(type[i]);
+        free(name[i]);
+    }
+        free(words);
+        free(type);
+        free(name);
+        free(current_row);
+        fclose(fp);
+        return 1;
     }
 
     /* ____________________Fine inizializzazione variabili____________________ */
 
+    int contenuto = 0; // controllo se file è vuoto
+
     while (fgets(current_row, 1024, fp) != NULL) {
+        contenuto = 1;
         
         row++;
 
@@ -187,7 +246,6 @@ int main(int argc, char *argv[]) {
             if (!strcmp(words[0], "\0")) continue;
             if (is_main(words)) continue;
 
-
             if (!start_statement_section) {
 
                 if (!end_variable_declaration(words[0], variables)) {
@@ -238,13 +296,24 @@ int main(int argc, char *argv[]) {
         }
 
     }
+    
+    // controllo file vuoto
+    if (!contenuto) {
+        printf("Errore: il file '%s' è vuoto\n", file_input);
+        fclose(fp);
+        free_all(variables, errors, newtypes, words, type, name, current_row, statistics);
+        return 1;
+    }
 
-    fclose(fp);
+    // chiusura file input
+    if (fclose(fp) != 0) {
+        printf("Errore: impossibile chiudere il file '%s'\n", file_input);
+        return 1;
+    }
 
     // variables e errors sono memorizzati nell'ordine decrescente, qui vengono reversed
     reverse_linked_list(&variables, &errors);
     
-    processing_statistics *statistics = (processing_statistics *) malloc(sizeof(processing_statistics));
     if (statistics != NULL) {
         statistics->var_count = 0;
         statistics->err_count = 0;
@@ -254,62 +323,37 @@ int main(int argc, char *argv[]) {
     }
     get_processing_statistics(statistics, variables, errors);
 
+    // apertura, scrittura e chiusura su file output
     if (file_output != NULL) {
         FILE *f_out = fopen(file_output, "w");
-        if (f_out != NULL) {
-            print_processing_statistics(f_out, statistics, variables, errors);
+        if (f_out == NULL) {
+            printf("Errore: impossibile creare il file '%s'\n", file_output);
+            return 1;
+        }
+        if (print_processing_statistics(f_out, statistics, variables, errors) != 0) {
+            printf("Errore: scrittura su file fallita\n");
             fclose(f_out);
+            return 1;
+        }
+
+        if (fclose(f_out) != 0) {
+            printf("Errore: impossibile chiudere il file '%s'\n", file_output);
+            return 1;
         }
     } 
 
     if (verbose || file_output == NULL) {
-        print_processing_statistics(stdout, statistics, variables, errors);
+        if (print_processing_statistics(stdout, statistics, variables, errors) != 0) {
+            printf("Errore: scrittura su stdout fallita\n");
+            return 1;
+        }
     }
 
     // TEST FOR IMPLEMENTATION
     // test_linked_lists(variables, errors, newtypes);
 
-    /* ____________________Inizio pulizia memoria____________________ */
-
-    // pulizia memoria variables
-    variable *next_var;
-    while (variables != NULL) {
-        next_var = variables->next;
-        free(variables);
-        variables = next_var;
-    }
-
-    // pulizia memoria errors
-    error *next_err;
-    while (errors != NULL) {
-        next_err = errors->next;
-        free(errors);
-        errors = next_err;
-    }
-
-    // pulizia memoria newtypes
-    newtype *next_newtype;
-    while (newtypes != NULL) {
-        next_newtype = newtypes->next;
-        free(newtypes);
-        newtypes = next_newtype;
-    }
-
-    // pulizie array di array words, type e name
-    for (int i=0; i < 128; i++) {
-        free(words[i]);
-        free(type[i]);
-        free(name[i]);
-    }
-    free(words);
-    free(type);
-    free(name);
-
-    // pulizie memoria variabili
-    free(current_row);
-    free(statistics);
-
-    /* ____________________Fine pulizia memoria____________________ */
+    // pulizia memoria allocata
+    free_all(variables, errors, newtypes, words, type, name, current_row, statistics);
 
     return 0;
 

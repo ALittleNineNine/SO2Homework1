@@ -324,9 +324,6 @@ void print_processing_statistics(processing_statistics *statistics, variable *va
     printf("\n--- ERRORI RILEVATI ---\n\n");
 modificato tutti i print con fprintf e di conseguenza modificato anche su header con aggiunta di FILE *out
 
-
-
-
 Risultato del fileinputprova.c:
 Numero totale di variabili valide:		42 (type + name validi)
 Numero totale di errori rilevati:		46 (type + name non validi + var non usate)
@@ -340,3 +337,88 @@ printf("Testo %d: ", row);
         printf("%s ", words[i]);
     }
     printf("\n\n");
+
+
+Update 08/22
+errore nei parametri di input, opzioni e relativi argomenti specificate da linea di comando: 
+aggiunta:
+if (argc < 2) {
+            printf("Errore: nessun parametro specificato\n");
+            input();
+            return 1;
+        }
+
+errore di apertura dei file di input e output: input già presente
+output modifica:
+if (file_output != NULL) {
+        FILE *f_out = fopen(file_output, "w");
+        if (f_out == NULL) {
+            printf("Errore: impossibile creare il file '%s'\n", file_output);
+            return 1;
+        }
+        if (print_processing_statistics(f_out, statistics, variables, errors) != 0) {
+            printf("Errore: scrittura su file fallita\n");
+            fclose(f_out);
+            return 1;
+        }
+
+        if (fclose(f_out) != 0) {
+            printf("Errore: impossibile chiudere il file '%s'\n", file_output);
+            return 1;
+        }
+    } 
+
+
+errore di chiusura file: 
+fclose(fp);
+modificato in:
+if (fclose(fp) != 0) {
+        printf("Errore: impossibile chiudere il file '%s'\n", file_input);
+        return 1;
+    }
+
+
+errore di lettura da file - ad esempio file vuoto o corrotto:
+
+
+
+errore di scrittura su file:
+if (verbose || file_output == NULL) {
+        if (print_processing_statistics(stdout, statistics, variables, errors) != 0) {
+            printf("Errore: scrittura su stdout fallita\n");
+            return 1;
+        }
+    }
+
+su print_processing_statistics aggiunto:
+if (out == NULL) return 1;
+
+su main presente:
+if (print_processing_statistics(f_out, statistics, variables, errors) != 0) {
+            printf("Errore: scrittura su file fallita\n");
+            fclose(f_out);
+            return 1;
+        }
+
+modificato void print_processing_statistics in int altrimenti non vale il codice scritto sopra
+
+errore con statistiche inserito dopo processing_statistics *statistics = (processing_statistics *) malloc(sizeof(processing_statistics));:
+if (statistics == NULL) {
+        printf("Errore con le statistiche\n");
+
+        for (int i=0; i < 128; i++) {
+        free(words[i]);
+        free(type[i]);
+        free(name[i]);
+    }
+        free(words);
+        free(type);
+        free(name);
+        free(current_row);
+        fclose(fp);
+        return 1;
+    }
+
+aggiunto codice prima dell'elaborazione file e prima della chiusura file input
+
+aggiunta per ogni malloc un controllo (if == NULL) 

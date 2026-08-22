@@ -21,6 +21,19 @@ typedef struct Retta {
     Punto fine;
 } Retta;                    // typedef struct con nome
 
+/* __________SEZIONE COMMENTI__________ */
+
+// sono un commento (riga)
+
+/* sono un commento (multi righe)
+int uno;
+int due;
+int tre;
+char aa;
+char bi;
+char ci;
+*/
+
 /* __________SEZIONE VARIABILI GLOBALI (TIPI STANDARD)__________ */
 
 int contatore;                          // type valido     | name valido     | non verrà usata
