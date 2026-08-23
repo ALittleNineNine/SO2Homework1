@@ -263,8 +263,6 @@ variable *variables_management(variable *variables, newtype *newtypes, char **ty
     char current_type[512] = {0};
     array_to_string(type, current_type);
 
-    if (current_type[0] == '\0') return variables;
-
     bool type_validity = verify_type(type, newtypes);
 
     char current_name[128] = {0};
@@ -305,6 +303,8 @@ bool is_basic_type(char word[]) {
 
 // dato un array type, restituisce true se è un type
 bool verify_type(char **type, newtype *newtypes) {
+
+    if (!strcmp(type[0], "\0")) return false;
 
     int signed_count = 0;
     int unsigned_count = 0;

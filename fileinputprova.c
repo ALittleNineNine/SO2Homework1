@@ -67,11 +67,10 @@ int *puntatore1, ***puntatore2;         // type valido     | name valido     | n
 float *2numeroIniz;                     // type valido     | name non valido | --
 unsignedd int arrTipoErrato [3];        // type non valido | name valido     | --
 
-/* __________SEZIONE VARIABILI GLOBALI (DICHIARAZIONE CON SPAZI VUOTI) [3var,3err]__________ */
+/* __________SEZIONE VARIABILI GLOBALI (DICHIARAZIONE CON SPAZI VUOTI) [2var,2err]__________ */
    
 int	            varConTab   ;			// type valido     | name valido     | non verrà usata
 int        varConSpaziMultipli;         // type valido     | name valido     | non verrà usata
-int ;                                   // type valido     | name non valido | --
 
 /* __________SEZIONE VARIABILI GLOBALI (TIPI ULTRA MEGA LUNGHI) [2var,2err]__________ */
 
@@ -85,7 +84,7 @@ Intero mioInteroConInizializ=99;        // type valido     | name valido     | n
 float 4erroreConInit = 3.14;            // type valido     | name non valido | --
 byte doppio$errore = 1;                 // type non valido | name non valido | --
 
-/* __________SEZIONE VARIABILI GLOBALI (CASI SPECIALI) [14var,14err]__________ */
+/* __________SEZIONE VARIABILI GLOBALI (CASI SPECIALI) [17var,18err]__________ */
 
 int variabileDichiarata;                            // type valido     | name valido     | non verrà usata
 long long int interoLunghissimo;                    // type valido     | name valido     | non verrà usata
@@ -94,6 +93,9 @@ int numero1, numero2=2, numero3;                    // type valido     | name va
 char charA, 2charB, 99, sb;                         // type valido     | charA, sb -> valid; 2charB, 99 -> !valid | non verranno usate
 int *punt1, *punt2, vari3;                          // type valido     | name valido     | non verranno usate
 int variabileDichiarata;                            // type valido     | name GIÀ DICHIARATA [name_error but not unused_error because it has already been signed]
+varSenzaTipo;                                       // type non valido | name non valido | --
+varSenzaTipoIniz = 0;                               // type non valido | name valido     | --
+int ;                                               // type valido     | name non valido | --
 
 /* __________SEZIONE MAIN__________ */
 
