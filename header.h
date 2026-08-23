@@ -33,6 +33,24 @@ typedef struct {
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
 variable *add_var(variable *next_var, char type[], char name[], int row);
 
+// crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef senza struct)
+newtype *add_newtype_no_struct(newtype *newtypes, char **words);
+
+// crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef con struct)
+newtype *add_newtype_struct(newtype *newtypes, char **words, int idx);
+
+// analizza gli argomenti del main, ritorna 1 se c'è errore
+int analyze_arguments(int argc, char *argv[], char **file_input, char **file_output, int *verbose);
+
+// allocazione dinamica della memoria per le risorse usate per analizzare il file .c
+int allocate_resources(char **current_row, char ***words, char ***type, char ***name, processing_statistics **statistics);
+
+/*
+    analizza tutte le variabili presenti e controlla se sono state usate
+    le informazioni ottenute vengono salvate in variables e newtypes
+*/
+void analyze_file(FILE *fp, variable **variables, newtype **newtypes, char **current_row, char ***words, char ***type, char ***name, int *contenuto);
+
 /*
     data una riga di codice, li spezza in al massimo in 64 parole:
     - se start_statement_section == true: le parole vengono spezzate in base anche a simboli speciali;
@@ -41,12 +59,6 @@ variable *add_var(variable *next_var, char type[], char name[], int row);
         vengono uniti in un unica word.
 */
 void analyze_row(char *row, char **words, bool start_statement_section);
-
-// crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef senza struct)
-newtype *add_newtype_no_struct(newtype *newtypes, char **words);
-
-// crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef con struct)
-newtype *add_newtype_struct(newtype *newtypes, char **words, int idx);
 
 // data una word, restituisce true se word è un tipo creato con typedef
 bool is_newtype(char word[], newtype *newtypes);
@@ -88,7 +100,7 @@ void reverse_linked_list(variable **variables);
 void get_processing_statistics(processing_statistics *statistics, variable *variables);
 
 // printa la statistica di elaborazione
-void print_processing_statistics(FILE *out, processing_statistics *statistics, variable *variables);
+int print_processing_statistics(FILE *out, processing_statistics *statistics, variable *variables);
 
 // ritorna true se in questa riga words contiene main
 bool is_main(char **words);
@@ -98,6 +110,9 @@ bool end_variable_declaration(char word[], variable *variables);
 
 // estrae le variabili usate e aggiorna nella lista concatenata variable->used = true
 void count_used_variables(char **words, variable *variables);
+
+// controlla il file output, se c'è errore lo stampa su stderr, e ritorna 1
+int output_file_control(char **file_output, variable *variables, processing_statistics *statistics, int verbose);
 
 // pulisce tutta la memoria allocata precedentemente
 void free_all(variable *variables, newtype *newtypes, char **words, char **type, char **name, char *current_row, processing_statistics *statistics);

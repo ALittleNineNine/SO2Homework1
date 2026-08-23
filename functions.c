@@ -16,6 +16,324 @@ variable *add_var(variable *next_var, char type[], char name[], int row) {
 
 }
 
+// crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef senza struct)
+newtype *add_newtype_no_struct(newtype *newtypes, char **words) {
+
+    int idx_type = 0;
+    while (words[idx_type][0] != '\0') idx_type++;
+
+    newtype *new_type = (newtype *) malloc(sizeof(newtype));
+    strcpy(new_type->type, words[idx_type-2]);
+    new_type->next = newtypes;
+    return new_type;
+
+}
+
+// crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef con struct)
+newtype *add_newtype_struct(newtype *newtypes, char **words, int idx) {
+
+    if (words[idx + 1][0] == '\0') {
+        return newtypes;
+    }
+    newtype *new_type = (newtype *) malloc(sizeof(newtype));
+    if (new_type == NULL) {
+        return newtypes;
+    }
+    strcpy(new_type->type, words[idx + 1]);
+    new_type->next = newtypes;
+    return new_type;
+
+}
+
+// analizza gli argomenti del main, ritorna 1 se c'è errore
+int analyze_arguments(int argc, char *argv[], char **file_input, char **file_output, int *verbose) {
+
+    for (int i = 1; i < argc; i++) {
+
+        // opzione input
+        if (strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--in") == 0) {
+            if (i + 1 < argc) {
+                *file_input = argv[++i]; // prima incremento e poi viene dato l'argomento 
+            } else {
+                fprintf(stderr, "Errore: %s necessario un argomento\n", argv[i]);
+                input();
+                return 1;
+            }
+        }
+
+        // opzione output
+        else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--out") == 0) {
+            if (i + 1 < argc) {
+                *file_output = argv[++i];
+            } else {
+                fprintf(stderr, "Errore: %s necessario un argomento\n", argv[i]);
+                input();
+                return 1;
+            }
+        }
+
+        // opzione verbose
+        else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
+            *verbose = 1;
+        }
+
+        // opzioni raggruppate -vio -ivo -vi -ov ...
+        else if (argv[i][0] == '-' && argv[i][1] != '-' && argv[i][1] != '\0') {
+            int len = strlen(argv[i]);
+            int num_arg = 0;    // conta quanti argomenti sono consumati (gestisce offset per accedere corettamente agli argomenti delle opzioni)
+
+            // verifica che ci siano abbastanza argomenti
+            int argomenti = 0;
+            for (int k = 1; k < len; k++) {
+                if (argv[i][k] == 'i' || argv[i][k] == 'o') {
+                    argomenti++;
+                }
+            }
+
+            if (argomenti > 0 && i + argomenti >= argc) {
+                fprintf(stderr, "Errore: mancano argomenti\n");
+                input();
+                return 1;
+            }
+
+            // processare le opzioni
+            for (int k = 1; k < len; k++) {
+                char current_k = argv[i][k];
+                if (current_k == 'v') {
+                    *verbose = 1;
+                }
+                else if (current_k == 'i') {
+                    *file_input = argv[i + 1 + num_arg];
+                    num_arg++;
+                }
+                else if (current_k == 'o') {
+                    *file_output = argv[i + 1 + num_arg];
+                    num_arg++;
+                }
+                else {
+                    fprintf(stderr, "Errore: opzione errata '-%c'\n", current_k);
+                    input();
+                    return 1;
+                }
+            }
+
+            // salta argomenti già consumati
+            if (num_arg > 0) {
+                i += num_arg;
+            }
+        }
+
+        else {
+            fprintf(stderr, "Errore: opzione errata %s\n", argv[i]);
+            input();
+            return 1;
+        }
+        
+    }
+
+    // verifica argomenti
+    if (argc < 2) {
+        fprintf(stderr, "Errore: nessun parametro specificato\n");
+        input();
+        return 1;
+    }
+
+    if (*file_input == NULL) {
+        fprintf(stderr, "Errore: manca file input\n");
+        input();
+        return 1;
+    } 
+    fprintf(stdout, "Input: %s\n", *file_input);
+    if (*file_output) {
+        fprintf(stdout, "Output: %s\n", *file_output);
+    }
+    if (*verbose) {
+        fprintf(stdout, "Presente opzione verbose\n");
+    }
+    fprintf(stdout, "\n");
+
+    return 0;
+
+}
+
+// allocazione dinamica della memoria per le risorse usate per analizzare il file .c
+int allocate_resources(char **current_row, char ***words, char ***type, char ***name, processing_statistics **statistics) {
+
+    *current_row = (char *) malloc(1024);  // memorizza la riga attuale in array di char
+    // controllo allocazione
+    if (*current_row == NULL) {
+        fprintf(stderr, "Errore: allocazione malloc fallita\n");
+        return 1;
+    }
+
+    // array di array di char che contiene le righe spezzate, i tipi e i nomi delle variabili
+    *words = (char **) malloc(128 * sizeof(char *));
+    *type = (char **) malloc(128 * sizeof(char *));
+    *name = (char **) malloc(128 * sizeof(char *));
+    // controllo allocazione
+    if (*words == NULL || *type == NULL || *name == NULL) {
+        fprintf(stderr, "Errore: allocazione malloc fallita per gli array di array di char\n");
+        free(*words);
+        free(*type);
+        free(*name);
+        free(*current_row);
+        return 1;
+    }
+
+    for (int i=0; i < 128; i++) {
+        (*words)[i] = (char *) malloc(128 * sizeof(char));
+        (*type)[i] = (char *) malloc(128 * sizeof(char));
+        (*name)[i] = (char *) malloc(128 * sizeof(char));
+        // controllo allocazione
+        if ((*words)[i] == NULL || (*type)[i] == NULL || (*name)[i] == NULL) {
+            fprintf(stderr, "Errore: allocazione malloc fallita per le parole '%d'\n", i);
+            for (int j = 0; j <= i; j++) {
+                free((*words)[j]);
+                free((*type)[j]);
+                free((*name)[j]);
+            }
+            free(*words);
+            free(*type);
+            free(*name);
+            free(*current_row);
+            return 1;
+        }
+    }
+
+    // struct per memorizzare la statistica
+    *statistics = (processing_statistics *) malloc(sizeof(processing_statistics));
+    // controllo allocazione
+    if (*statistics == NULL) {
+        fprintf(stderr, "Errore: allocazione malloc fallita per statistiche\n");
+
+        for (int i=0; i < 128; i++) {
+            free((*words)[i]);
+            free((*type)[i]);
+            free((*name)[i]);
+        }
+        free(*words);
+        free(*type);
+        free(*name);
+        free(*current_row);
+        return 1;
+    }
+
+    return 0;
+
+}
+
+/*
+    analizza tutte le variabili presenti e controlla se sono state usate
+    le informazioni ottenute vengono salvate in variables e newtypes
+*/
+void analyze_file(FILE *fp, variable **variables, newtype **newtypes, char **current_row, char ***words, char ***type, char ***name, int *contenuto) {
+
+    int row = 0;                            // numero di riga attuale
+    bool row_finished = true;               // viene assegnato false quando inizia un'istruzione a più righe, true normalmente
+    int brace_level = 0;                    // variabile accessoria per verificare se la graffa è chiusa bene
+    bool in_brace = false;                  // indica se è dentro nelle graffe
+    
+    bool start_statement_section = false;   // indica se è iniziata la parte delle istruzioni (fine dichiarazione variabili)
+
+    while (fgets(*current_row, 1024, fp) != NULL) {
+        *contenuto = 1;
+        row++;
+
+        if ((*current_row)[0] != '\n' && (*current_row)[0] != '\0') {
+
+            remove_comments(*current_row); 
+            
+            // azzerare words
+            for (int i=0; i < 128; i++) {
+                (*words)[i][0] = '\0';
+            }
+
+            analyze_row(*current_row, *words, start_statement_section);
+
+            /* ____________________Inizio gestione typedef____________________ */
+
+            // aggiungere il nuovo tipo creato con typedef, se è struct viene messo il flag row_finished a false
+            if (!strcmp((*words)[0], "typedef")) {
+                if (!strcmp((*words)[1], "struct")) {
+                    row_finished = false;
+                    brace_level = 0;
+                } else {
+                    *newtypes = add_newtype_no_struct(*newtypes, *words);
+                    continue;
+                }
+            }
+
+            // trovare il tipo struct e metterlo in newtypes
+            if (!row_finished) {
+                int idx = 0;
+                while (((*words)[idx][0] != '\0')) {
+                    if ((*words)[idx][0] == '{') {
+                        brace_level++;
+                        in_brace = true;
+                    }
+                    if ((*words)[idx][0] == '}') brace_level--;
+                    if (brace_level == 0 && in_brace) {
+                        *newtypes = add_newtype_struct(*newtypes, *words, idx);
+                        row_finished = true;
+                        in_brace = false;
+                        break;
+                    }
+                    idx++;
+                }
+                continue;
+            }
+
+            /* ____________________Fine gestione typedef____________________ */
+
+            if (!strcmp((*words)[0], "#include")) continue;
+            if (!strcmp((*words)[0], "\0")) continue;
+            if (is_main(*words)) continue;
+
+            if (!start_statement_section) {
+
+                if (!end_variable_declaration((*words)[0], *variables)) {
+
+                    // azzerare type e name
+                    for (int i=0; i < 128; i++) {
+                        (*type)[i][0] = '\0';
+                        (*name)[i][0] = '\0';
+                    }
+
+                    int type_length = get_type(*words, *type);
+                    get_name(*words, *name, type_length);
+
+                    // aggiungere la/le variabile/i se non ci sono errori, ritorna la nuova testa della lista
+                    *variables = variables_management(*variables, *newtypes, *type, *name, row);
+                
+                    // test_array_of_array(words, type, name, row);    // [TEST FOR IMPLEMENTATION]
+
+                } else {
+
+                    start_statement_section = true;
+                    count_used_variables(*words, *variables);
+
+                    // test_array_of_array(words, type, name, row);    // [TEST FOR IMPLEMENTATION]
+
+                }
+
+            } else {
+
+                // se incontro return 0, la lettura finisce
+                if (!strcmp((*words)[0], "return") && !strcmp((*words)[1], "0")) break;
+
+                // parte verifica se la variabile è usato o no (parte dopo dichiarazione variabile)
+                count_used_variables(*words, *variables);
+
+                // test_array_of_array(words, type, name, row);    // [TEST FOR IMPLEMENTATION]
+
+            }
+
+        }
+
+    }
+
+}
+
 /*
     data una riga di codice, li spezza in al massimo in parole:
     - se start_statement_section == true: le parole vengono spezzate in base anche a simboli speciali;
@@ -173,35 +491,6 @@ void analyze_row(char *row, char **words, bool start_statement_section) {
         if (flag >= 128) break;
 
     }
-
-}
-
-// crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef senza struct)
-newtype *add_newtype_no_struct(newtype *newtypes, char **words) {
-
-    int idx_type = 0;
-    while (words[idx_type][0] != '\0') idx_type++;
-
-    newtype *new_type = (newtype *) malloc(sizeof(newtype));
-    strcpy(new_type->type, words[idx_type-2]);
-    new_type->next = newtypes;
-    return new_type;
-
-}
-
-// crea un nuovo nodo newtype e lo collega in testa alla lista newtype (riguardante typedef con struct)
-newtype *add_newtype_struct(newtype *newtypes, char **words, int idx) {
-
-    if (words[idx + 1][0] == '\0') {
-        return newtypes;
-    }
-    newtype *new_type = (newtype *) malloc(sizeof(newtype));
-    if (new_type == NULL) {
-        return newtypes;
-    }
-    strcpy(new_type->type, words[idx + 1]);
-    new_type->next = newtypes;
-    return new_type;
 
 }
 
@@ -482,7 +771,9 @@ void get_processing_statistics(processing_statistics *statistics, variable *vari
 }
 
 // printa la statistica di elaborazione
-void print_processing_statistics(FILE *out, processing_statistics *statistics, variable *variables) {
+int print_processing_statistics(FILE *out, processing_statistics *statistics, variable *variables) {
+
+    if (out == NULL) return 1;
 
     fprintf(out, "\n---------- STATISTICHE DI ELABORAZIONE -----------\n\n");
 
@@ -502,18 +793,28 @@ void print_processing_statistics(FILE *out, processing_statistics *statistics, v
     while (current_var != NULL) {
         if (!current_var->type_valid) {
             fprintf(out, "%s", current_var->type);
+
+            // padding
             int padding = 32 - (int)strlen(current_var->type);
             if (padding > 0) {
                 for (int i = 0; i < padding; i++) fprintf(out, " ");
+            } else {
+                fprintf(out, " ");
             }
+
             fprintf(out, "Errore tipo in riga %d\n", current_var->row);
         }
         if (!current_var->name_valid || current_var->declared) {
             fprintf(out, "%s", current_var->name);
+
+            // padding
             int padding = 32 - (int)strlen(current_var->name);
             if (padding > 0) {
                 for (int i = 0; i < padding; i++) fprintf(out, " ");
+            } else {
+                fprintf(out, " ");
             }
+
             fprintf(out, "Errore nome in riga %d\n", current_var->row);
         }
         current_var = current_var->next;
@@ -527,16 +828,23 @@ void print_processing_statistics(FILE *out, processing_statistics *statistics, v
     while (current_var != NULL) {
         if (!current_var->used && current_var->type_valid && current_var->name_valid && !current_var->declared) {
             fprintf(out, "%s", current_var->name);
+
+            // padding
             int padding = 32 - (int)strlen(current_var->name);
             if (padding > 0) {
                 for (int i = 0; i < padding; i++) fprintf(out, " ");
+            } else {
+                fprintf(out, " ");
             }
+
             fprintf(out, "Dichiarata in riga %d\n", current_var->row);
         }
         current_var = current_var->next;
     }
 
     fprintf(out, "\n------------------------------------------------------\n\n");
+
+    return 0;
 
 }
 
@@ -611,6 +919,38 @@ void count_used_variables(char **words, variable *variables) {
         }
 
     }
+
+}
+
+// controlla il file output, se c'è errore lo stampa su stderr, e ritorna 1
+int output_file_control(char **file_output, variable *variables, processing_statistics *statistics, int verbose) {
+
+    if (*file_output != NULL) {
+        FILE *f_out = fopen(*file_output, "w");
+        if (f_out == NULL) {
+            fprintf(stderr, "Errore: impossibile creare il file '%s'\n", *file_output);
+            return 1;
+        }
+        if (print_processing_statistics(f_out, statistics, variables) != 0) {
+            fprintf(stderr, "Errore: scrittura su file fallita\n");
+            fclose(f_out);
+            return 1;
+        }
+
+        if (fclose(f_out) != 0) {
+            fprintf(stderr, "Errore: impossibile chiudere il file '%s'\n", *file_output);
+            return 1;
+        }
+    } 
+
+    if (verbose || *file_output == NULL) {
+        if (print_processing_statistics(stdout, statistics, variables) != 0) {
+            fprintf(stderr, "Errore: scrittura su stdout fallita\n");
+            return 1;
+        }
+    }
+
+    return 0;
 
 }
 
