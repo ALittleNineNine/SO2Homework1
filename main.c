@@ -73,6 +73,7 @@ int main(int argc, char *argv[]) {
 
         // apertura, scrittura e chiusura su file output
         if (output_file_control(&file_output, variables, statistics, verbose) != 0) {
+            free_all(variables, newtypes, words, type, name, current_row, statistics);
             free(file_input);
             return 1;
         }
