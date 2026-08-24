@@ -228,10 +228,10 @@ int generate_title_out(char **file_output) {
             fprintf(stderr, "Errore: impossibile creare il file '%s'\n", *file_output);
             return 1;
         } else {
-            for (int i=0; i < strlen(*file_output); i++) fprintf(out_fp, "~");
+            for (int i=0; i < (int)strlen(*file_output); i++) fprintf(out_fp, "~");
             fprintf(out_fp, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
             fprintf(out_fp, "~~~~~~~~~~~~~ FILE OUTPUT '%s' ~~~~~~~~~~~~~~\n", *file_output);
-            for (int i=0; i < strlen(*file_output); i++) fprintf(out_fp, "~");
+            for (int i=0; i < (int)strlen(*file_output); i++) fprintf(out_fp, "~");
             fprintf(out_fp, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
             if (fclose(out_fp) != 0) {
                 fprintf(stderr, "Errore: impossibile chiudere il file '%s'\n", *file_output);
@@ -248,10 +248,10 @@ int generate_title_out(char **file_output) {
 int generate_title_in(char **file_output, char *file_input, int verbose) {
 
     if (verbose || *file_output == NULL) {
-        for (int j=0; j < strlen(file_input); j++) fprintf(stdout, "-");
+        for (int j=0; j < (int)strlen(file_input); j++) fprintf(stdout, "-");
         fprintf(stdout, "---------------------------------------\n");
         fprintf(stdout, "-------- ELABORAZIONE FILE '%s' ---------\n", file_input);
-        for (int j=0; j < strlen(file_input); j++) fprintf(stdout, "-");
+        for (int j=0; j < (int)strlen(file_input); j++) fprintf(stdout, "-");
         fprintf(stdout, "---------------------------------------\n");
     }
 
@@ -261,10 +261,10 @@ int generate_title_in(char **file_output, char *file_input, int verbose) {
             fprintf(stderr, "Errore: impossibile appendere il file '%s'\n", *file_output);
             return 1;
         } else {
-            for (int j=0; j < strlen(file_input); j++) fprintf(out_fp2, "-");
+            for (int j=0; j < (int)strlen(file_input); j++) fprintf(out_fp2, "-");
             fprintf(out_fp2, "---------------------------------------\n");
             fprintf(out_fp2, "-------- ELABORAZIONE FILE '%s' ---------\n", file_input);
-            for (int j=0; j < strlen(file_input); j++) fprintf(out_fp2, "-");
+            for (int j=0; j < (int)strlen(file_input); j++) fprintf(out_fp2, "-");
             fprintf(out_fp2, "---------------------------------------\n");
             if (fclose(out_fp2) != 0) {
                 fprintf(stderr, "Errore: impossibile chiudere il file '%s'\n", *file_output);
