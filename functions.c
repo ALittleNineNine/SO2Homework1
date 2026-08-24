@@ -1,5 +1,7 @@
 #include "header.h"
 
+static int block_comment = 0; // indica se siamo all'interno di un commento [verrà usata nelle funzioni successive]
+
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
 variable *add_var(variable *next_var, char type[], char name[], int row) {
 
@@ -46,28 +48,40 @@ newtype *add_newtype_struct(newtype *newtypes, char **words, int idx) {
 }
 
 // analizza gli argomenti del main, ritorna 1 se c'è errore
-int analyze_arguments(int argc, char *argv[], char **file_input, char **file_output, int *verbose) {
+int analyze_arguments(int argc, char *argv[], char ***file_input, int *file_input_count, char **file_output, int *verbose) {
+
+    *file_input = malloc(argc * sizeof(char *));
+    if (*file_input == NULL) {
+        fprintf(stderr, "Errore: allocazione malloc fallita\n");
+        return 1;
+    }
 
     for (int i = 1; i < argc; i++) {
 
         // opzione input
         if (strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--in") == 0) {
-            if (i + 1 < argc) {
-                *file_input = argv[++i]; // prima incremento e poi viene dato l'argomento 
-            } else {
+            if (i + 1 >= argc || is_option(argv[i+1])) {
                 fprintf(stderr, "Errore: %s necessario un argomento\n", argv[i]);
                 input();
+                free(*file_input);
                 return 1;
             }
+            i++;    // passiamo al primo argomento dell'opzione
+            while (i < argc && !is_option(argv[i])) {
+                (*file_input)[(*file_input_count)++] = argv[i];
+                i++;
+            }
+            i--;    // ripristino indice for
         }
 
         // opzione output
         else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--out") == 0) {
-            if (i + 1 < argc) {
+            if (i + 1 < argc || is_option(argv[i+1])) {
                 *file_output = argv[++i];
             } else {
                 fprintf(stderr, "Errore: %s necessario un argomento\n", argv[i]);
                 input();
+                free(*file_input);
                 return 1;
             }
         }
@@ -79,53 +93,83 @@ int analyze_arguments(int argc, char *argv[], char **file_input, char **file_out
 
         // opzioni raggruppate -vio -ivo -vi -ov ...
         else if (argv[i][0] == '-' && argv[i][1] != '-' && argv[i][1] != '\0') {
+            
             int len = strlen(argv[i]);
-            int num_arg = 0;    // conta quanti argomenti sono consumati (gestisce offset per accedere corettamente agli argomenti delle opzioni)
-
-            // verifica che ci siano abbastanza argomenti
+            int idx_i = 0;      // index 0 significa che non esiste (argv[i][0] == '-')
+            int idx_o = 0;      // come sopra
+            
+            // verifica l'esistenza di 'i', 'o', 'v' e che ci siano abbastanza argomenti
             int argomenti = 0;
             for (int k = 1; k < len; k++) {
-                if (argv[i][k] == 'i' || argv[i][k] == 'o') {
-                    argomenti++;
+                if (argv[i][k] == 'v') {
+                    *verbose = 1;
+                    continue;
                 }
+                else if (argv[i][k] == 'i') idx_i = k;
+                else if (argv[i][k] == 'o') idx_o = k;
+                else {  // trovata una lettera strana
+                    fprintf(stderr, "Errore: opzione errata %s\n", argv[i]);
+                    input();
+                    free(*file_input);
+                    return 1;
+                }
+                argomenti++;
             }
-
             if (argomenti > 0 && i + argomenti >= argc) {
                 fprintf(stderr, "Errore: mancano argomenti\n");
                 input();
+                free(*file_input);
                 return 1;
             }
 
+            i++;    // passiamo al primo argomento dell'opzione
+
             // processare le opzioni
-            for (int k = 1; k < len; k++) {
-                char current_k = argv[i][k];
-                if (current_k == 'v') {
-                    *verbose = 1;
-                }
-                else if (current_k == 'i') {
-                    *file_input = argv[i + 1 + num_arg];
-                    num_arg++;
-                }
-                else if (current_k == 'o') {
-                    *file_output = argv[i + 1 + num_arg];
-                    num_arg++;
-                }
-                else {
-                    fprintf(stderr, "Errore: opzione errata '-%c'\n", current_k);
+            if (idx_i > 0 && idx_o > 0) {   // casi 'i', 'o' coesistenti
+
+                if (i + 1 >= argc || is_option(argv[i]) || is_option(argv[i+1])) {
+                    fprintf(stderr, "Errore: mancano argomenti\n");
                     input();
+                    free(*file_input);
                     return 1;
                 }
+
+                if (idx_i < idx_o) {    // caso 'i' precede 'o'
+
+                    while (i + 1 < argc && !is_option(argv[i+1])) {
+                        (*file_input)[(*file_input_count)++] = argv[i++];
+                    }
+                    *file_output = argv[i++];
+
+                } else {    // caso 'o' precede 'i'
+
+                    *file_output = argv[i++];
+                    while (i < argc && !is_option(argv[i])) {
+                        (*file_input)[(*file_input_count)++] = argv[i++];
+                    }
+
+                }
+
+            } else if (idx_i > 0) {     // casi 'i' senza 'o'
+
+                while (i < argc && !is_option(argv[i])) {
+                    (*file_input)[(*file_input_count)++] = argv[i++];
+                }
+
+            } else {    // casi 'o' senza 'i'
+                
+                *file_output = argv[i++];
+
             }
 
-            // salta argomenti già consumati
-            if (num_arg > 0) {
-                i += num_arg;
-            }
+            i--;    // ripristino indice for
+
         }
 
         else {
             fprintf(stderr, "Errore: opzione errata %s\n", argv[i]);
             input();
+            free(*file_input);
             return 1;
         }
         
@@ -135,15 +179,21 @@ int analyze_arguments(int argc, char *argv[], char **file_input, char **file_out
     if (argc < 2) {
         fprintf(stderr, "Errore: nessun parametro specificato\n");
         input();
+        free(*file_input);
         return 1;
     }
 
-    if (*file_input == NULL) {
+    if (*file_input_count == 0) {
         fprintf(stderr, "Errore: manca file input\n");
         input();
+        free(*file_input);
         return 1;
     } 
-    fprintf(stdout, "Input: %s\n", *file_input);
+    fprintf(stdout, "Input: ");
+    for (int i=0; i < *file_input_count; i++) {
+        fprintf(stdout, "%s ", (*file_input)[i]);
+    }
+    fprintf(stdout, "\n");
     if (*file_output) {
         fprintf(stdout, "Output: %s\n", *file_output);
     }
@@ -151,6 +201,71 @@ int analyze_arguments(int argc, char *argv[], char **file_input, char **file_out
         fprintf(stdout, "Presente opzione verbose\n");
     }
     fprintf(stdout, "\n");
+
+    return 0;
+
+}
+
+// data un arary di char, ritorna true se è una opzione in argomento di main
+bool is_option(char *arg) {
+
+    if (!strcmp(arg, "-i")   || !strcmp(arg, "-o")    || !strcmp(arg, "-v")        ||
+        !strcmp(arg, "--in") || !strcmp(arg, "--out") || !strcmp(arg, "--verbose") ||
+        !strcmp(arg, "-io")  || !strcmp(arg, "-iv")   || !strcmp(arg, "-iov")      || !strcmp(arg, "-ivo") ||
+        !strcmp(arg, "-oi")  || !strcmp(arg, "-ov")   || !strcmp(arg, "-oiv")      || !strcmp(arg, "-ovi") ||
+        !strcmp(arg, "-vi")  || !strcmp(arg, "-vo")   || !strcmp(arg, "-vio")      || !strcmp(arg, "-voi")) return true;
+
+    return false;
+
+}
+
+// genera intestazione per l'eventuale file output
+int generate_title_out(char **file_output) {
+
+    if (*file_output != NULL) {
+        FILE *out_fp = fopen(*file_output, "w");
+        if (out_fp == NULL) {
+            fprintf(stderr, "Errore: impossibile creare il file '%s'\n", *file_output);
+            return 1;
+        } else {
+            for (int i=0; i < strlen(*file_output); i++) fprintf(out_fp, "~");
+            fprintf(out_fp, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+            fprintf(out_fp, "~~~~~~~~~~~~~ FILE OUTPUT '%s' ~~~~~~~~~~~~~~\n", *file_output);
+            for (int i=0; i < strlen(*file_output); i++) fprintf(out_fp, "~");
+            fprintf(out_fp, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
+            fclose(out_fp);
+        }
+    }
+
+    return 0;
+
+}
+
+// genera intestazione per ogni file input
+int generate_title_in(char **file_output, char *file_input, int verbose) {
+
+    if (verbose || *file_output == NULL) {
+        for (int j=0; j < strlen(file_input); j++) fprintf(stdout, "-");
+        fprintf(stdout, "---------------------------------------\n");
+        fprintf(stdout, "-------- ELABORAZIONE FILE '%s' ---------\n", file_input);
+        for (int j=0; j < strlen(file_input); j++) fprintf(stdout, "-");
+        fprintf(stdout, "---------------------------------------\n");
+    }
+
+    if (*file_output != NULL) {
+        FILE *out_fp2 = fopen(*file_output, "a");
+        if (out_fp2 == NULL) {
+            fprintf(stderr, "Errore: impossibile appendere il file '%s'\n", *file_output);
+            return 1;
+        } else {
+            for (int j=0; j < strlen(file_input); j++) fprintf(out_fp2, "-");
+            fprintf(out_fp2, "---------------------------------------\n");
+            fprintf(out_fp2, "-------- ELABORAZIONE FILE '%s' ---------\n", file_input);
+            for (int j=0; j < strlen(file_input); j++) fprintf(out_fp2, "-");
+            fprintf(out_fp2, "---------------------------------------\n");
+            fclose(out_fp2);
+        }
+    }
 
     return 0;
 
@@ -227,6 +342,8 @@ int allocate_resources(char **current_row, char ***words, char ***type, char ***
     le informazioni ottenute vengono salvate in variables e newtypes
 */
 void analyze_file(FILE *fp, variable **variables, newtype **newtypes, char **current_row, char ***words, char ***type, char ***name, int *contenuto) {
+
+    block_comment = 0;      // ripristino variabile controllo commenti
 
     int row = 0;                            // numero di riga attuale
     bool row_finished = true;               // viene assegnato false quando inizia un'istruzione a più righe, true normalmente
@@ -926,7 +1043,7 @@ void count_used_variables(char **words, variable *variables) {
 int output_file_control(char **file_output, variable *variables, processing_statistics *statistics, int verbose) {
 
     if (*file_output != NULL) {
-        FILE *f_out = fopen(*file_output, "w");
+        FILE *f_out = fopen(*file_output, "a");
         if (f_out == NULL) {
             fprintf(stderr, "Errore: impossibile creare il file '%s'\n", *file_output);
             return 1;
@@ -1046,8 +1163,6 @@ void input() {
 }
 
 // funzione per rimuovere commenti
-static int block_comment = 0; // indica se siamo all'interno di un commento
-
 char* remove_comments(char *line) {
     if (line == NULL) {
         return NULL;

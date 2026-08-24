@@ -40,7 +40,16 @@ newtype *add_newtype_no_struct(newtype *newtypes, char **words);
 newtype *add_newtype_struct(newtype *newtypes, char **words, int idx);
 
 // analizza gli argomenti del main, ritorna 1 se c'è errore
-int analyze_arguments(int argc, char *argv[], char **file_input, char **file_output, int *verbose);
+int analyze_arguments(int argc, char *argv[], char ***file_input, int *file_input_count, char **file_output, int *verbose);
+
+// data un arary di char, ritorna true se è una opzione in argomento di main
+bool is_option(char *arg);
+
+// genera intestazione per l'eventuale file output
+int generate_title_out(char **file_output);
+
+// genera intestazione per ogni file input
+int generate_title_in(char **file_output, char *file_input, int verbose);
 
 // allocazione dinamica della memoria per le risorse usate per analizzare il file .c
 int allocate_resources(char **current_row, char ***words, char ***type, char ***name, processing_statistics **statistics);
