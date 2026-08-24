@@ -5,7 +5,7 @@ static int block_comment = 0; // indica se siamo all'interno di un commento [ver
 // crea un nuovo nodo variabile e lo collega in testa alla lista variabili
 variable *add_var(variable *next_var, char type[], char name[], int row) {
 
-    variable *new_var = (variable *) malloc(sizeof(variable));
+    variable *new_var = malloc(sizeof(variable));
     strcpy(new_var->type, type);
     strcpy(new_var->name, name);
     new_var->type_valid = true;
@@ -24,7 +24,7 @@ newtype *add_newtype_no_struct(newtype *newtypes, char **words) {
     int idx_type = 0;
     while (words[idx_type][0] != '\0') idx_type++;
 
-    newtype *new_type = (newtype *) malloc(sizeof(newtype));
+    newtype *new_type = malloc(sizeof(newtype));
     strcpy(new_type->type, words[idx_type-2]);
     new_type->next = newtypes;
     return new_type;
@@ -37,7 +37,7 @@ newtype *add_newtype_struct(newtype *newtypes, char **words, int idx) {
     if (words[idx + 1][0] == '\0') {
         return newtypes;
     }
-    newtype *new_type = (newtype *) malloc(sizeof(newtype));
+    newtype *new_type = malloc(sizeof(newtype));
     if (new_type == NULL) {
         return newtypes;
     }
@@ -76,7 +76,7 @@ int analyze_arguments(int argc, char *argv[], char ***file_input, int *file_inpu
 
         // opzione output
         else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--out") == 0) {
-            if (i + 1 < argc || is_option(argv[i+1])) {
+            if (i + 1 < argc && !is_option(argv[i+1])) {
                 *file_output = argv[++i];
             } else {
                 fprintf(stderr, "Errore: %s necessario un argomento\n", argv[i]);
@@ -233,7 +233,10 @@ int generate_title_out(char **file_output) {
             fprintf(out_fp, "~~~~~~~~~~~~~ FILE OUTPUT '%s' ~~~~~~~~~~~~~~\n", *file_output);
             for (int i=0; i < strlen(*file_output); i++) fprintf(out_fp, "~");
             fprintf(out_fp, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
-            fclose(out_fp);
+            if (fclose(out_fp) != 0) {
+                fprintf(stderr, "Errore: impossibile chiudere il file '%s'\n", *file_output);
+                return 1;
+            }
         }
     }
 
@@ -263,7 +266,10 @@ int generate_title_in(char **file_output, char *file_input, int verbose) {
             fprintf(out_fp2, "-------- ELABORAZIONE FILE '%s' ---------\n", file_input);
             for (int j=0; j < strlen(file_input); j++) fprintf(out_fp2, "-");
             fprintf(out_fp2, "---------------------------------------\n");
-            fclose(out_fp2);
+            if (fclose(out_fp2) != 0) {
+                fprintf(stderr, "Errore: impossibile chiudere il file '%s'\n", *file_output);
+                return 1;
+            }
         }
     }
 
@@ -274,7 +280,7 @@ int generate_title_in(char **file_output, char *file_input, int verbose) {
 // allocazione dinamica della memoria per le risorse usate per analizzare il file .c
 int allocate_resources(char **current_row, char ***words, char ***type, char ***name, processing_statistics **statistics) {
 
-    *current_row = (char *) malloc(1024);  // memorizza la riga attuale in array di char
+    *current_row = malloc(1024);  // memorizza la riga attuale in array di char
     // controllo allocazione
     if (*current_row == NULL) {
         fprintf(stderr, "Errore: allocazione malloc fallita\n");
@@ -282,9 +288,9 @@ int allocate_resources(char **current_row, char ***words, char ***type, char ***
     }
 
     // array di array di char che contiene le righe spezzate, i tipi e i nomi delle variabili
-    *words = (char **) malloc(128 * sizeof(char *));
-    *type = (char **) malloc(128 * sizeof(char *));
-    *name = (char **) malloc(128 * sizeof(char *));
+    *words = malloc(128 * sizeof(char *));
+    *type = malloc(128 * sizeof(char *));
+    *name = malloc(128 * sizeof(char *));
     // controllo allocazione
     if (*words == NULL || *type == NULL || *name == NULL) {
         fprintf(stderr, "Errore: allocazione malloc fallita per gli array di array di char\n");
@@ -296,9 +302,9 @@ int allocate_resources(char **current_row, char ***words, char ***type, char ***
     }
 
     for (int i=0; i < 128; i++) {
-        (*words)[i] = (char *) malloc(128 * sizeof(char));
-        (*type)[i] = (char *) malloc(128 * sizeof(char));
-        (*name)[i] = (char *) malloc(128 * sizeof(char));
+        (*words)[i] = malloc(128 * sizeof(char));
+        (*type)[i] = malloc(128 * sizeof(char));
+        (*name)[i] = malloc(128 * sizeof(char));
         // controllo allocazione
         if ((*words)[i] == NULL || (*type)[i] == NULL || (*name)[i] == NULL) {
             fprintf(stderr, "Errore: allocazione malloc fallita per le parole '%d'\n", i);
@@ -316,7 +322,7 @@ int allocate_resources(char **current_row, char ***words, char ***type, char ***
     }
 
     // struct per memorizzare la statistica
-    *statistics = (processing_statistics *) malloc(sizeof(processing_statistics));
+    *statistics = malloc(sizeof(processing_statistics));
     // controllo allocazione
     if (*statistics == NULL) {
         fprintf(stderr, "Errore: allocazione malloc fallita per statistiche\n");
