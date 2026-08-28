@@ -422,3 +422,6 @@ if (statistics == NULL) {
 aggiunto codice prima dell'elaborazione file e prima della chiusura file input
 
 aggiunta per ogni malloc un controllo (if == NULL) 
+
+
+Update 08/23

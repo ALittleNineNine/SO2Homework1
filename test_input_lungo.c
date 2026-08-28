@@ -34,7 +34,7 @@ char bi;
 char ci;
 */
 
-/* __________SEZIONE VARIABILI GLOBALI (TIPI STANDARD)__________ */
+/* __________SEZIONE VARIABILI GLOBALI (TIPI STANDARD) [12var,13err]__________ */
 
 int contatore;                          // type valido     | name valido     | non verrà usata
 float 1numeroIniz;                      // type valido     | name non valido | --
@@ -49,14 +49,14 @@ int 123numeriIniz;                      // type valido     | name non valido | -
 int at@nonValido;                       // type valido     | name non valido | --
 tipoErrato 2doppioErrore;               // type non valido | name non valido | --
 
-/* __________SEZIONE VARIABILI GLOBALI (TIPI UTENTE)__________ */
+/* __________SEZIONE VARIABILI GLOBALI (TIPI UTENTE) [4var,3err]__________ */
 
 Intero mioIntero;                       // type valido     | name valido     | non verrà usata
 Punto mioPunto;                         // type valido     | name valido     | non verrà usata
 Retta miaRetta;                         // type valido     | name valido     | verrà usata
 InteroSenzaSegno mioPositivo;           // type valido     | name valido     | non verrà usata
 
-/* __________SEZIONE VARIABILI GLOBALI (TIPI ARRAY E PUNTATORI)__________ */
+/* __________SEZIONE VARIABILI GLOBALI (TIPI ARRAY E PUNTATORI) [10var,9err]__________ */
 
 int vettoreIntero[5];                   // type valido     | name valido     | non verrà usata
 char *puntatoreCarattere;               // type valido     | name valido     | verrà usata
@@ -67,29 +67,41 @@ int *puntatore1, ***puntatore2;         // type valido     | name valido     | n
 float *2numeroIniz;                     // type valido     | name non valido | --
 unsignedd int arrTipoErrato [3];        // type non valido | name valido     | --
 
-/* __________SEZIONE VARIABILI GLOBALI (DICHIARAZIONE CON SPAZI VUOTI)__________ */
+/* __________SEZIONE VARIABILI GLOBALI (DICHIARAZIONE CON SPAZI VUOTI) [2var,2err]__________ */
    
 int	            varConTab   ;			// type valido     | name valido     | non verrà usata
 int        varConSpaziMultipli;         // type valido     | name valido     | non verrà usata
-int ;                                   // type valido     | name non valido | --
 
-/* __________SEZIONE VARIABILI GLOBALI (TIPI ULTRA MEGA LUNGHI)__________ */
+/* __________SEZIONE VARIABILI GLOBALI (TIPI ULTRA MEGA LUNGHI) [2var,2err]__________ */
 
 const volatile unsigned const long const long volatile int volatile const const volatile ultraMegaTipo;   // type valido     | name valido     | non verrà usata
 const volatile unsigned const long const long float tipoIllegale;                                         // type non valido | name valido     | --
  
-/* __________SEZIONE VARIABILI GLOBALI (DICHIARAZIONE E INIZIALIZZAZIONE)__________ */
+/* __________SEZIONE VARIABILI GLOBALI (DICHIARAZIONE E INIZIALIZZAZIONE) [4var,5err]__________ */
 
 int interoConInizializ = 100;           // type valido     | name valido     | non verrà usata
 Intero mioInteroConInizializ=99;        // type valido     | name valido     | non verrà usata
 float 4erroreConInit = 3.14;            // type valido     | name non valido | --
 byte doppio$errore = 1;                 // type non valido | name non valido | --
 
+/* __________SEZIONE VARIABILI GLOBALI (CASI SPECIALI) [17var,18err]__________ */
+
+int variabileDichiarata;                            // type valido     | name valido     | non verrà usata
+long long int interoLunghissimo;                    // type valido     | name valido     | non verrà usata
+unsigned long long int interoLunghissimoSenzaSegno; // type valido     | name valido     | non verrà usata
+int numero1, numero2=2, numero3;                    // type valido     | name valido     | non verranno usate
+char charA, 2charB, 99, sb;                         // type valido     | charA, sb -> valid; 2charB, 99 -> !valid | non verranno usate
+int *punt1, *punt2, vari3;                          // type valido     | name valido     | non verranno usate
+int variabileDichiarata;                            // type valido     | name GIÀ DICHIARATA [name_error but not unused_error because it has already been signed]
+varSenzaTipo;                                       // type non valido | name non valido | --
+varSenzaTipoIniz = 0;                               // type non valido | name valido     | --
+int ;                                               // type valido     | name non valido | --
+
 /* __________SEZIONE MAIN__________ */
 
 int main() {
  
-    /* __________SEZIONE VARIABILI LOCALI (TIPI STANDARD)__________ */
+    /* __________SEZIONE VARIABILI LOCALI (TIPI STANDARD) [11var,6err]__________ */
     
     int a;                              // type valido     | name valido     | verrà usata
     int b;                              // type valido     | name valido     | verrà usata
@@ -103,13 +115,13 @@ int main() {
     long long while;                    // type valido     | name non valido | --
     float double doppioTipoBase;        // type non valido | name valido     | --
     
-    /* __________SEZIONE VARIABILI LOCALI (TIPI UTENTE)__________ */
+    /* __________SEZIONE VARIABILI LOCALI (TIPI UTENTE) [3var,3err]__________ */
     
     Intero MioInteroLocale;             // type valido     | name valido     | non verrà usata
     InteroLungo mioLungoLocale;         // type valido     | name valido     | non verrà usata
     Retta miaRettaLocale;               // type valido     | name valido     | non verrà usata
     
-    /* __________SEZIONE VARIABILI LOCALI (TIPI ARRAY E PUNTATORI)__________ */
+    /* __________SEZIONE VARIABILI LOCALI (TIPI ARRAY E PUNTATORI) [5var,1err]__________ */
 
     int arrayLocale[5];                 // type valido     | name valido     | verrà usata
     int *puntatoreLocale;               // type valido     | name valido     | verrà usata
@@ -117,7 +129,7 @@ int main() {
     float matriceLocale[3][3];          // type valido     | name valido     | non verrà usata
     int contatoreLocale;                // type valido     | name valido     | verrà usata
 
-    /* __________SEZIONE VARIABILI LOCALI (DICHIARAZIONE E INIZIALIZZAZIONE)__________ */
+    /* __________SEZIONE VARIABILI LOCALI (DICHIARAZIONE E INIZIALIZZAZIONE) [5var,1err]__________ */
     
     int x = 5;                                  // type valido     | name valido     | verrà usata
     int y = 10, w = 20;                         // type valido     | name valido     | verranno usate
@@ -215,6 +227,3 @@ int main() {
     return 0;
 
 }
-
-
-
