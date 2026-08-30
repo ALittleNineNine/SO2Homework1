@@ -1,3 +1,6 @@
+#ifndef HEADER_H
+#define HEADER_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,14 +20,13 @@ typedef struct variable {
 
 // struct lista concatenata per memorizzare informazioni sui tipi creati con typedef
 typedef struct newtype {
-    char type[512];         // nome del tuoi
+    char type[512];         // nome del tipo
     struct newtype *next;   // puntatore al prossimo tipo
 } newtype;
 
 // struct per memorizzare informazioni sulle statistiche di elaborazione
 typedef struct {
     int var_count;              // numero totale di variabili valide
-    int err_count;              // numero totale di errori
     int var_unused_count;       // variabili dichiarate ma non usate
     int wrong_var_name_count;   // variabili con nome non valido
     int wrong_var_type_count;   // variabili con tipo non valido
@@ -132,11 +134,10 @@ void test_array_of_array(char **words, char **type, char **name, int row);
 // TEST FOR IMPLEMENTATION
 void test_linked_lists(variable *variables, newtype *newtypes);
 
-// mostra a utente compilazione corretta [from ananas]
+// mostra a utente compilazione corretta 
 void input();
 
-// funzione per rimuovere commenti [from ananas]
+// funzione per rimuovere commenti 
 char* remove_comments(char *line);
 
-
-
+#endif

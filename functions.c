@@ -228,11 +228,12 @@ int generate_title_out(char **file_output) {
             fprintf(stderr, "Errore: impossibile creare il file '%s'\n", *file_output);
             return 1;
         } else {
-            for (int i=0; i < (int)strlen(*file_output); i++) fprintf(out_fp, "~");
-            fprintf(out_fp, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-            fprintf(out_fp, "~~~~~~~~~~~~~ FILE OUTPUT '%s' ~~~~~~~~~~~~~~\n", *file_output);
-            for (int i=0; i < (int)strlen(*file_output); i++) fprintf(out_fp, "~");
-            fprintf(out_fp, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
+            for (int i=0; i < (int)strlen(*file_output); i++) fprintf(out_fp, "-");
+            fprintf(out_fp, "-------------------------------------------\n");
+            fprintf(out_fp, "------------- FILE OUTPUT '%s' --------------\n", *file_output);
+                                               
+            for (int i=0; i < (int)strlen(*file_output); i++) fprintf(out_fp, "-");
+            fprintf(out_fp, "-------------------------------------------\n\n");
             if (fclose(out_fp) != 0) {
                 fprintf(stderr, "Errore: impossibile chiudere il file '%s'\n", *file_output);
                 return 1;
@@ -458,7 +459,7 @@ void analyze_file(FILE *fp, variable **variables, newtype **newtypes, char **cur
 }
 
 /*
-    data una riga di codice, li spezza in al massimo in parole:
+    data una riga di codice, li spezza in parole:
     - se start_statement_section == true: le parole vengono spezzate in base anche a simboli speciali;
     - altrimenti: le parole vengono spezzate solo mediante ' ', '\t', '\n', ';', '=', '\0' e '*';
     - quando si incontrano '...' (char), "..." (array di char), [...] e {...} (dichiarazione e inizializzazione di array, verificato se lo è davvero)
@@ -877,7 +878,6 @@ void reverse_linked_list(variable **variables) {
 void get_processing_statistics(processing_statistics *statistics, variable *variables) {
 
     statistics->var_count = 0;
-    statistics->err_count = 0;
     statistics->var_unused_count = 0;
     statistics->wrong_var_name_count = 0;
     statistics->wrong_var_type_count = 0;
@@ -1181,9 +1181,9 @@ char* remove_comments(char *line) {
         for (int i = 0; line[i] != '\0'; i++) {
             if (line[i] == '*' && line[i + 1] == '/') {
                 strcpy(buffer, line + i + 2); // salva tutto dopo */ 
-                strcpy(line, buffer); // copia all0inizio della riga
+                strcpy(line, buffer); // copia all'inizio della riga
                 block_comment = 0; // commento chiuso
-                return remove_comments(line); // ricontrolla la riga per altri commenti (ricorsione)
+                return remove_comments(line); // ricontrolla la riga per altri commenti
             }
         }
         // se tutta la riga è un commento viene svuotata 
@@ -1225,7 +1225,7 @@ char* remove_comments(char *line) {
     // commenti */ senza /*
     for (int i = 0; line[i] != '\0'; i++) {
         if (line[i] == '*' && line[i + 1] == '/') {
-            printf("Error: commento non aperto\n");
+            fprintf(stderr, "Error: commento non aperto\n");
             strcpy(buffer, line + i + 2); // salva tutto dopo */
             strcpy(line + i, buffer);
             if (i > 0) {
@@ -1235,6 +1235,3 @@ char* remove_comments(char *line) {
     }
     return line;
 } 
-
-
-
